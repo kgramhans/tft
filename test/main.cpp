@@ -61,11 +61,11 @@ int main() {
    pFilter->doAllocation(LEN, 20000, 21000);
    pFilter->filterSamples(spike, LEN, 0, 0);
    ConfinedGaussianWaveletVoice wavelet(0.001, 8.7, 0, pFilter);
-   wavelet.allocateResult(LEN);
+   wavelet.allocateResult(LEN,0);
    wavelet.transform();
    wavelet.dump();
    ConfinedGaussianWaveletVoice wavelet2(0.5, 8.7, 0, pFilter);
-   wavelet2.allocateResult(LEN);
+   wavelet2.allocateResult(LEN,0);
    wavelet2.transform();
    wavelet2.dump();
    delete pFilter;
@@ -89,7 +89,7 @@ int main() {
    unsigned int nb = wc->doTransform(spike, LEN, 0, 0);
 
    TIMING(t3);
-   wc->extractFrequencySlices(0, 1.0, LEN, 0.0, 0.5/FLEN, FLEN, out, OUT_LEN);
+   wc->extractFrequencySlices(0, 1.0, LEN, 0.0, 0.5/FLEN, FLEN, out, OUT_LEN, false);
 
    TIMING(t4);
 
@@ -125,10 +125,10 @@ int main() {
    
    // Reset calculator and do the same again
    unsigned int pre, post;
-   wc->prepare(LEN, pre, post);
+   wc->prepare(LEN, 0, pre, post);
    cout << "Pre " << pre << ", post " << post << endl;
    unsigned int len = LEN/2 + dist999(rng);
-   wc->prepare(len, pre, post);
+   wc->prepare(len, 0, pre, post);
    cout << "Transform of " << len << " samples with overlap " << overlap << " gave ";
    nb = wc->doTransform(spike, len, 0, 0);
    cout << nb << " points in t/f plane" << endl;

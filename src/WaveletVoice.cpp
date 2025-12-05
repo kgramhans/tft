@@ -37,6 +37,7 @@ WaveletVoice::WaveletVoice(const float overlapPercentage,
    waveletHalfLen(0),
    duration(0),
    transformLength(0),
+   resultStep(0),
    frequency(fCenter)
 {}
 
@@ -71,37 +72,49 @@ void WaveletVoice::getRequiredPaddingSamples(unsigned int & pre, unsigned int & 
    assert(waveletHalfLen); // Must be initialised by derived constructor
    assert(transformLength);
    assert(resultLen);
-   assert(transformStep > 0);
+   assert(resultStep > 0);
    pre = (waveletHalfLen << octave) + dyadicFilter->getExtraSamples(octave);
-   post = pre + (((resultLen * transformStep) << octave) - transformLength);
+   post = pre + resultLen * resultStep - transformLength;
 }
 
-void WaveletVoice::allocateResult(unsigned int nSamples)
+pair<unsigned int, unsigned int> WaveletVoice::calculateResultLenAndStep(unsigned int _resolution) const
+{
+   assert(transformLength);
+   unsigned int resultStep = std::max(transformStep, (_resolution / 2) >> octave ) << octave; // Be more conservative internally with resolution
+   unsigned int rval = 1 + (transformLength - 1) / resultStep;
+   int remaining = (transformLength - 1) - (rval -1) * resultStep;
+   while (2 * remaining >= (long) resultStep)
+   {
+      remaining -= resultStep;
+      assert(2 * remaining < (long) resultStep);
+      rval++;
+   }
+   return pair<unsigned int, unsigned int>(rval, resultStep);
+}
+
+void WaveletVoice::allocateResult(unsigned int nSamples, unsigned int _resolution)
 {
    if (resultLen)
    {
       // Allocation already done. Get rid of that if we have a change in length
       if (nSamples == transformLength)
       {
-         return; // We are good
+         // Check if allocation will result in same step
+         if (make_pair(resultLen, resultStep) == calculateResultLenAndStep(_resolution))
+         {
+            return; // We are good
+         }
       }
       delete[]resultRe;
       delete[]resultIm;
       resultLen=0;
       transformLength = 0;
+      resultStep = 0;
    }
 
    assert(resultLen == 0);
    transformLength = nSamples;
-   unsigned int resultStep = transformStep << octave;
-   resultLen = 1 + (nSamples - 1) / resultStep;
-   int remaining = (nSamples - 1) - (resultLen -1) * resultStep;
-   while (2 * remaining >= (long) resultStep)
-   {
-      remaining -= resultStep;
-      assert(2 * remaining < (long) resultStep);
-      resultLen++;
-   }
+   tie(resultLen, resultStep) = calculateResultLenAndStep(_resolution);
    resultRe = new TF_DATA_TYPE[resultLen];
    resultIm = new TF_DATA_TYPE[resultLen];
 }
@@ -109,6 +122,7 @@ void WaveletVoice::allocateResult(unsigned int nSamples)
 int WaveletVoice::transform()
 {
    assert(resultLen);
+   assert(resultStep);
    
    // Simply step through data until result is full!
    pair<TF_DATA_TYPE *, unsigned int> rval = dyadicFilter->getSamples(octave, -(waveletHalfLen << octave));
@@ -124,6 +138,7 @@ int WaveletVoice::transform()
    TF_DATA_TYPE * ptRe = resultRe;
    TF_DATA_TYPE * ptIm = resultIm;
    TF_DATA_TYPE * ptS = rval.first + waveletHalfLen;
+   size_t Sstep = resultStep >> octave;
    for (int inx = 0; inx < resultLen; inx++)
    {
       TF_DATA_TYPE * ptR = ptS + 1;
@@ -139,7 +154,7 @@ int WaveletVoice::transform()
       }
       *ptRe++ = sumRe;
       *ptIm++ = sumIm;
-      ptS +=  transformStep;
+      ptS +=  Sstep;
       
       // Verify consistency in allocations
       if (inx == 0)
@@ -158,7 +173,7 @@ TF_DATA_TYPE WaveletVoice::get(double timestamp) const
 {
    assert(timestamp >= 0 && timestamp < transformLength);
    assert(resultLen);
-   unsigned int inx = (unsigned int) (timestamp / (transformStep * (1 << octave)) + 0.5);
+   unsigned int inx = (unsigned int) (timestamp / resultStep + 0.5);
    assert(inx < resultLen);
       
    // No interpolation, no rounding - just plain get it as easy as possible

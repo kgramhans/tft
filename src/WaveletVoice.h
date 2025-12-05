@@ -34,7 +34,7 @@ public:
    virtual void dump();
    virtual ~WaveletVoice();
    void getRequiredPaddingSamples(unsigned int & pre, unsigned int & post) const;
-   virtual void allocateResult(unsigned int nSamples);
+   virtual void allocateResult(unsigned int nSamples, unsigned int resolution);
    int transform();
    TF_DATA_TYPE get(double timestamp) const;
    virtual void getFrequency(double & freq, double & bw) const = 0;
@@ -43,7 +43,8 @@ protected:
    WaveletVoice(const float overlapPercentage,
                 const DyadicFilter * dFilter,
                 const double fCenter);
-   void matchTransformStep();
+   pair<unsigned int, unsigned int>  calculateResultLenAndStep(unsigned int _resolution) const;
+
    
    const DyadicFilter * dyadicFilter;
    unsigned int octave;
@@ -56,6 +57,7 @@ protected:
    const float overlap;
    float duration;
    unsigned int transformStep;
+   unsigned int resultStep;
    unsigned int transformLength;
    double frequency;
 };

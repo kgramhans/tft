@@ -99,7 +99,7 @@ public:
    /**
     Reset any internal state to that of a newly created object. This may be a time-saver as opposed to free/allocate af new object
     */
-   virtual void  prepare(unsigned int nSamples, unsigned int & nPre, unsigned int & nPost) override;
+   virtual void  prepare(unsigned int nSamples, unsigned int resolution, unsigned int & nPre, unsigned int & nPost) override;
    
    /** Member functions for obtaining discrete values of the underlying transform. This discretization happens in the continuous time/frequency plane and a number of schemes can apply. Such methods must be defined or implied during creation of specific instances implementing this interface
     1) Some method for interpolation between transform values. In its simples form: Choose closest neighbour. More advanced could be using 2D splines
@@ -124,13 +124,13 @@ public:
     must always be fulfilled. Otherwise, 0 will be returned
     
     @return Number of points calculated, ie nTimeSteps * nFreqSteps */
-   virtual int extractFrequencySlices(double sampleOffset,
-                                      double stepTime,
-                                      int    nTimeSteps,
-                                      std::vector<double> frequencies,
+   virtual int extractFrequencySlices(const std::vector<double> & timestamps,
+                                      const std::vector<double> & frequencies,
                                       TF_DATA_TYPE *  out,
-                                      int    nOut
+                                      int    nOut,
+                                      bool transpose
                                       ) const override;
+   
    
 
 private:

@@ -73,7 +73,7 @@ public:
      @param nSamples specifies the number of samples that need investigation
      @return a pair of integers specifying padding required before (first) and after (second) a signal
     */
-   virtual void  prepare(unsigned int nSamples, unsigned int & nPre, unsigned int & nPost) = 0;
+   virtual void  prepare(unsigned int nSamples, unsigned int resolution, unsigned int & nPre, unsigned int & nPost) = 0;
    
    /**
     do a time frequency transform calculating the internal representation in the time/frequency plane.
@@ -119,21 +119,36 @@ public:
     must always be fulfilled. Otherwise, 0 will be returned
     
     @return Number of points calculated, ie nTimeSteps * nFreqSteps */
-   virtual int extractFrequencySlices(double sampleOffset,
-                                      double stepTime,
-                                      int    nTimeSteps,
-                                      const std::vector<double> frequencies,
+   virtual int extractFrequencySlices(const std::vector<double> & timestamps,
+                                      const std::vector<double> & frequencies,
                                       TF_DATA_TYPE *  out,
-                                      int    nOut
+                                      int    nOut,
+                                      bool transpose
                                       ) const = 0;
    virtual int extractFrequencySlices(double sampleOffset,
                                       double stepTime,
                                       int    nTimeSteps,
+                                      const std::vector<double> & frequencies,
+                                      TF_DATA_TYPE *  out,
+                                      int    nOut,
+                                      bool transpose
+                                      ) const
+   {
+      // Pack a vector of timestamps
+      std::vector<double> timestamps;
+      for (int i = 0; i < nTimeSteps; i++)
+      {
+         timestamps.push_back(sampleOffset + i * stepTime);
+      }
+      return extractFrequencySlices(timestamps, frequencies, out, nOut, transpose);
+   }
+   virtual int extractFrequencySlices(const std::vector<double> & timestamps,
                                       double freqOffset,
                                       double freqStep,
                                       int    nFreqSteps,
                                       TF_DATA_TYPE *  out,
-                                      int    nOut
+                                      int    nOut,
+                                      bool transpose
                                       ) const
    {
       // Pack a vector of frequencies
@@ -142,7 +157,26 @@ public:
       {
          frequencies.push_back(freqOffset + i * freqStep);
       }
-      return extractFrequencySlices(sampleOffset, stepTime, nTimeSteps, frequencies, out, nOut);
+      return extractFrequencySlices(timestamps, frequencies, out, nOut, transpose);
+   }
+   virtual int extractFrequencySlices(double sampleOffset,
+                                      double stepTime,
+                                      int    nTimeSteps,
+                                      double freqOffset,
+                                      double freqStep,
+                                      int    nFreqSteps,
+                                      TF_DATA_TYPE *  out,
+                                      int    nOut,
+                                      bool transpose
+                                      ) const
+   {
+      // Pack a vector of frequencies
+      std::vector<double> frequencies;
+      for (int i = 0; i < nFreqSteps; i++)
+      {
+         frequencies.push_back(freqOffset + i * freqStep);
+      }
+      return extractFrequencySlices(sampleOffset, stepTime, nTimeSteps, frequencies, out, nOut, transpose);
    }
 
    /**

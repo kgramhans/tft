@@ -96,7 +96,7 @@ WaveletCalculator::~WaveletCalculator()
  unsigned int  WaveletCalculator::doTransform(const TF_DATA_TYPE* pSamples, const unsigned int nSamples, const unsigned int nValidSamplesBefore, const unsigned int nValidSamplesAfter)
  {
     unsigned int pre, post;
-    prepare(nSamples, pre, post);
+    prepare(nSamples, 0, pre, post); // Here we prepare without limiting resolution. If prepare was already called with limiting resolution, such resolution will be preserved
     // Feed data into our dyadic filter
     dyadicFilter.filterSamples(pSamples, nSamples, nValidSamplesBefore, nValidSamplesAfter);
     
@@ -112,12 +112,12 @@ WaveletCalculator::~WaveletCalculator()
  /**
   Reset any internal state to that of a newly created object. This may be a time-saver as opposed to free/allocate af new object
  */
-void  WaveletCalculator::prepare(const unsigned int n_samples, unsigned int & nPre, unsigned int & nPost)
+void  WaveletCalculator::prepare(unsigned int n_samples, unsigned int resolution, unsigned int & nPre, unsigned int & nPost)
  {
     nSamples = n_samples;
     for (vector<WaveletVoice *>::iterator iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
     {
-       (*iter)->allocateResult(nSamples);
+       (*iter)->allocateResult(nSamples, resolution);
     }
     
     // Then do allocation of dyadic filter since we now do know requirements
@@ -148,31 +148,41 @@ void  WaveletCalculator::prepare(const unsigned int n_samples, unsigned int & nP
  must always be fulfilled. Otherwise, 0 will be returned
  
  @return Number of points calculated, ie nTimeSteps * nFreqSteps */
- int WaveletCalculator::extractFrequencySlices(double sampleOffset,
-                                   double stepTime,
-                                   int    nTimeSteps,
-                                   std::vector<double> frequencies,
-                                   TF_DATA_TYPE *  out,
-                                   int    nOut
-                                   ) const
+
+ int WaveletCalculator::extractFrequencySlices(const std::vector<double> & timestamps,
+                                               const std::vector<double> & frequencies,
+                                               TF_DATA_TYPE *  out,
+                                               int    nOut,
+                                               bool transpose
+                                               ) const
  {
     // Do some consistency checks
     assert(nSamples);
-    assert(nTimeSteps > 0);
-    assert(sampleOffset + stepTime * (nTimeSteps - 1) <= nSamples - 1);
-    assert(nTimeSteps * frequencies.size() <= nOut);
+    assert(timestamps.size() * frequencies.size() <= nOut);
     
     // Iterate frequencies
     TF_DATA_TYPE * pOut = out;
+    size_t transposeOffset = 0;
+    size_t outIncrement = 1;
     for (std::vector<double>::const_iterator iterFreq = frequencies.begin(); iterFreq != frequencies.end(); iterFreq++)
     {
+       if (transpose)
+       {
+          // Restart a new slice
+          pOut = out + transposeOffset++;
+          outIncrement = frequencies.size();
+       }
        // Consider some out-of-range frequencies
        assert(*iterFreq <= 0.5);
        if (*iterFreq <= 0.0) {
-          memset(pOut, 0, sizeof(TF_DATA_TYPE) * nTimeSteps);
-          pOut += nTimeSteps;
+          for (int i = 0; i < timestamps.size(); i++)
+          {
+             *pOut = 0;
+             pOut += outIncrement;
+          }
           continue;
        }
+
        // Locate the voice closest to the asked-for frequency
        const WaveletVoice * pVoice = NULL;
        double bestLogDist = 999;
@@ -196,21 +206,26 @@ void  WaveletCalculator::prepare(const unsigned int n_samples, unsigned int & nP
        assert(pVoice);
        
        // Maybe we are not within range
-       if (abs(*iterFreq - freqBest) > 0.5* bwBest)
-       {
-          memset(pOut, 0, sizeof(TF_DATA_TYPE) * nTimeSteps);
-          pOut += nTimeSteps;
+       if (abs(*iterFreq - freqBest) > 0.5* bwBest) {
+          for (int i = 0; i < timestamps.size(); i++)
+          {
+             *pOut = 0;
+             pOut += outIncrement;
+          }
           continue;
        }
-       for (int i = 0; i < nTimeSteps; i++)
+       
+       // Finally, iterate all timestamps
+       for (std::vector<double>::const_iterator iterTime = timestamps.begin(); iterTime != timestamps.end(); iterTime++)
        {
-          double timestamp = sampleOffset + i * stepTime;
-          TF_DATA_TYPE val = pVoice->get(timestamp);
-          *pOut++ = val;
+          assert(*iterTime <= nSamples - 1);
+          TF_DATA_TYPE val = pVoice->get(*iterTime);
+          *pOut = val;
+          pOut += outIncrement;
        }
 
     }
-    return (int)(nTimeSteps * frequencies.size());
+    return (int)(timestamps.size() * frequencies.size());
  }
 
 /**

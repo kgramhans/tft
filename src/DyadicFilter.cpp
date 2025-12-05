@@ -211,7 +211,7 @@ void DyadicFilter::filterSamples(const TF_DATA_TYPE * pSamples, const unsigned i
    // We must have room
    assert(vBufferBegin.size() && vBufferBegin[0]);
    assert(n_samples + n_samples_before + n_samples_after <= vBufferLengths[0]);
-   assert(n_samples_before  < vBufferTimeZero[0] - vBufferBegin[0]);
+   assert(n_samples_before  <= vBufferTimeZero[0] - vBufferBegin[0]);
    assert(n_samples + n_samples_after <= vBufferLengths[0] - (vBufferTimeZero[0] - vBufferBegin[0]));
    
    // Take it all in
