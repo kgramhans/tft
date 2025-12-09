@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <iomanip>
 #include <chrono>
 #include <random>
+#include "../src/StftCalculator.h"
 #include "../src/WaveletCalculator.h"
 #include "../src/DyadicFilter.h"
 #include "../src/ConfinedGaussianWaveletVoice.h"
@@ -27,14 +28,32 @@ using namespace chrono;
 int main() {
     std::cout << "Hello World!" << std::endl;
 
-#define LEN 100000
-#define FLEN 10
+#define LEN 100
+#define FLEN 32
 #define OUT_LEN (LEN*FLEN)
    float spike[LEN];
    float out[OUT_LEN];
    memset(spike, 0, sizeof(float) * (LEN));
    memset(out, 0, sizeof(float) * (OUT_LEN));
-   spike[LEN/2] = 10.0;
+   for (int i = 0; i < LEN; i++)
+   {
+      switch (i % 4)
+      {
+         case 0:
+            spike[i] = 0;
+            break;
+         case 1:
+            spike[i] = 1;
+            break;
+         case 2:
+            spike[i] = 0;
+            break;
+         case 3:
+            spike[i] = -1;
+            break;
+      }
+   }
+//   spike[LEN/2] = 10.0;
 
    /**==================**/
    DyadicFilter * pFilter;
@@ -76,6 +95,28 @@ int main() {
    std::uniform_int_distribution<std::mt19937::result_type> dist99(1,99); // distribution in range [1, 6]
    std::uniform_int_distribution<std::mt19937::result_type> dist999(1,999); // distribution in range [1, 6]
 
+   float window[64];
+   for (int i = 0; i < 64;i++)
+   {
+      window[i] = 1;
+   }
+   ITimeFrequencyCalculator * stft = new StftCalculator(8, 2 * FLEN, window);
+   stft->doTransform(spike, LEN, 0, 0);
+   stft->extractFrequencySlices(0, 1.0, LEN, 0.1, 0.3/FLEN, FLEN, out, OUT_LEN, false);
+   cout << std::fixed << std::setprecision(2);
+   std::cout << std::endl;
+   double total1 = 0;
+   for (int finx = FLEN; finx--; )
+   {
+      for (int tinx = LEN/2 - 10; tinx < LEN/2 + 10; tinx++)
+      {
+         std::cout << out[finx*LEN + tinx] << ", ";
+         total1 += out[finx*LEN + tinx];
+      }
+      std::cout << std::endl;
+   }
+
+
    float overlap = dist99(rng);
    int octaves = 10;
    double Q = 8.651358596;
@@ -83,7 +124,7 @@ int main() {
 #define TIMING(x) high_resolution_clock::time_point x = high_resolution_clock::now()
    
    TIMING(t1);
-   ITimeFrequencyCalculator * wc = new WaveletCalculator(octaves, fmax, Q, overlap);
+   ITimeFrequencyCalculator * wc = new WaveletCalculator(octaves, 0.4, Q, overlap);
 
    TIMING(t2);
    unsigned int nb = wc->doTransform(spike, LEN, 0, 0);
@@ -110,14 +151,18 @@ int main() {
 
    cout << std::fixed << std::setprecision(2);
    std::cout << std::endl;
+   double total2 = 0;
    for (int finx = FLEN; finx--; )
    {
       for (int tinx = LEN/2 - 10; tinx < LEN/2 + 10; tinx++)
       {
          std::cout << out[finx*LEN + tinx] << ", ";
+         total2 += out[finx*LEN + tinx];
       }
       std::cout << std::endl;
    }
+   
+   cout << "Totals " << total1 << " / " << total2 << endl;
 
    // Reuse calculator for a shorter sequence. This is OK, although not efficient
    nb = wc->doTransform(spike, LEN/2, 0, 0);

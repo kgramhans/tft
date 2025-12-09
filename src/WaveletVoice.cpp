@@ -177,6 +177,6 @@ TF_DATA_TYPE WaveletVoice::get(double timestamp) const
    assert(inx < resultLen);
       
    // No interpolation, no rounding - just plain get it as easy as possible
-   return sqrt(resultRe[inx] * resultRe[inx] + resultIm[inx] * resultIm[inx]);
+   return resultRe[inx] * resultRe[inx] + resultIm[inx] * resultIm[inx];
 }
    
