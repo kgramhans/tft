@@ -28,7 +28,7 @@ using namespace chrono;
 int main() {
     std::cout << "Hello World!" << std::endl;
 
-#define LEN 100
+#define LEN 10000
 #define FLEN 32
 #define OUT_LEN (LEN*FLEN)
    float spike[LEN];
@@ -103,6 +103,7 @@ int main() {
    ITimeFrequencyCalculator * stft = new StftCalculator(8, 2 * FLEN, window);
    stft->doTransform(spike, LEN, 0, 0);
    stft->extractFrequencySlices(0, 1.0, LEN, 0.1, 0.3/FLEN, FLEN, out, OUT_LEN, false);
+   delete stft;
    cout << std::fixed << std::setprecision(2);
    std::cout << std::endl;
    double total1 = 0;

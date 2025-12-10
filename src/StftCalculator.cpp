@@ -25,7 +25,7 @@ using namespace std;
 
 StftCalculator::StftCalculator(unsigned int windowLength,
                   unsigned int transformLength,
-                  TF_DATA_TYPE * pWindow) : nWindowLength(windowLength), nTransformLength(transformLength), vWindow(pWindow, pWindow + windowLength), nSamples(0), nPre(0), nPost(0)
+                  const TF_DATA_TYPE * pWindow) : nWindowLength(windowLength), nTransformLength(transformLength), vWindow(pWindow, pWindow + windowLength), nSamples(0)
 {
    assert(windowLength && (ceil(log2(windowLength)) == floor(log2(windowLength))));
    assert(transformLength && (ceil(log2(transformLength)) == floor(log2(transformLength))));
@@ -35,7 +35,7 @@ StftCalculator::StftCalculator(unsigned int windowLength,
    TF_DATA_TYPE sum = accumulate(vWindow.begin(), vWindow.end(), decltype(vWindow)::value_type(0));
    for (auto &it : vWindow)
    {
-      it *= 1.0/(sum);
+      it *= 2.0/(sum);  // "2" because we attribute all energy to one-sided sectrum
    }
 }
 
@@ -45,6 +45,9 @@ StftCalculator::~StftCalculator()
    
 unsigned int  StftCalculator::doTransform(const TF_DATA_TYPE* pSamples, unsigned int _nSamples, unsigned int nValidSamplesBefore, unsigned int nValidSamplesAfter)
 {
+   unsigned int nPre;
+   unsigned int nPost;
+   
    assert(_nSamples);
    nSamples = _nSamples;
    // Transform is simple: We just take in samples and prepare our buffer. We choose to do calculations on-the-fly when extracting results
@@ -135,7 +138,7 @@ int StftCalculator::extractFrequencySlices(const std::vector<double> & timestamp
          assert (delta < nOut);
          if (inx == 0)
          {
-            out[delta] = workBuf[0] * workBuf[0];
+            out[delta] = 0.5 * workBuf[0] * workBuf[0]; // Factor 0.5 bcs DC is not two-sided
          }
          else
          {
@@ -146,7 +149,7 @@ int StftCalculator::extractFrequencySlices(const std::vector<double> & timestamp
          delta += dout;
       }
    }
-   return delta - dout + 1;
+   return (int)(delta - dout + 1);
 }
    
    

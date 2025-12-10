@@ -28,18 +28,19 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "WaveletVoice.h"
 
-class ConfinedGaussianWaveletVoice : public WaveletVoice
+using WaveletBaseClass = WaveletVoice; // Two possibilities here: WaveletVoice is faster, WaveletVoiceUnbuffered uses less memory. Optimal choice depends on usage scenario
+class ConfinedGaussianWaveletVoice : public WaveletBaseClass
 {
 public:
    /**
-    Calculate wavelet based on modulated half-length approximate confined gaussian window, ref https://en.wikipedia.org/wiki/Window_function#Confined_Gaussian_window
+    Construct wavelet based on modulated half-length approximate confined gaussian window, ref https://en.wikipedia.org/wiki/Window_function#Confined_Gaussian_window
      This window is a good-enough estimate for confined gaussian window which has optimum time-frequency location for a fixed-length window
 
-    Calculate half-length wavelet (complex conjugate symmetri) at relative frequency
-         Result will have dimension halfLen+1 upon return
+    Construct half-length wavelet (complex conjugate symmetrical) at relative frequency
+         Resulting wavelet is buffered in internal buffers having dimension halfLen+1
          Approximate temporal resolution is dT =  (2 * halfLen) * sigma
          Approximate frequency resolution is dF = 1/4/pi/dT
-         Approximate 70dB frequency resolution depends on choice of sigma. For sigma = 0.1, we get approximately 6.5 * dF
+         Approximate 70dB frequency resolution depends on choice of sigma. For sigma = 0.1, we get approximately 6.5 * dF (found via inspection)
     
          Relative bandwidth of generated wavelet is 2*dF / relF which we solve for halfLen vs Q factor
          Q^-1 = 2*dF/relF = 1/2/pi/dT/relF  = 1 / (2 * pi * (2 * halfLen ) * sigma * relF)
@@ -48,7 +49,7 @@ public:
             halfLen = (1 / (2 * pi * sigma * relF * Q^-1) ) / 2
     
          Example
-            Q^-1 = 0.1156 (1/6 octave filter, 1/Q = sqrt(2**1/6) - sqrt(2**-1/6)
+            Q^-1 = 0.1156 (1/6 octave filter, 1/Q = sqrt(2^1/6) - sqrt(2^-1/6)
             sigma = 0.1
             relF = 0.25
       
@@ -71,7 +72,7 @@ protected:
    static constexpr float sigma = 0.1;
    static constexpr float bw70Ratio = 6.5;
    static constexpr float pi = 3.14159265359;
-   unsigned int windowL;
+   unsigned int waveletLength;
    double q;
    
    float gaussian(float x);

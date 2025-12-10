@@ -32,7 +32,7 @@ using namespace std;
 ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
                 double Q,
                 const float overlapPercentage,
-                const DyadicFilter * dFilter) : WaveletVoice(overlapPercentage, dFilter, fCenter), q(Q)
+                const DyadicFilter * dFilter) : WaveletBaseClass(overlapPercentage, dFilter, fCenter), q(Q)
 {
    // When constructing, firstly let us know about the upper frequency limit by the wavelet to be defined
    assert(fCenter > 0 && fCenter <= 0.5);
@@ -47,28 +47,28 @@ ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
    fCenter *= (1 << octave);
    
    // Calculate Len of wavelet, halfLen = (1 / (2 * pi * sigma * fCenter / Q)) / 2
-   float waveletLength = Q / (2.0 * pi * sigma * fCenter) ;
-   waveletHalfLen = (unsigned int) (waveletLength / 2);
-   windowL = 2 * waveletHalfLen + 1;
-   waveletRe = new TF_DATA_TYPE[waveletHalfLen + 1];
-   waveletIm = new TF_DATA_TYPE[waveletHalfLen + 1];
+   float fltWaveletLength = Q / (2.0 * pi * sigma * fCenter) ;
+   waveletHalfLength = (unsigned int) (fltWaveletLength / 2);
+   waveletLength = 2 * waveletHalfLength + 1;
+   waveletRe = new TF_DATA_TYPE[waveletHalfLength + 1];
+   waveletIm = new TF_DATA_TYPE[waveletHalfLength + 1];
    
    float sum;
-   waveletRe[0] = sum = approximateConfinedGaussian(waveletHalfLen);
+   waveletRe[0] = sum = approximateConfinedGaussian(waveletHalfLength);
    waveletIm[0] = 0;
    
-   for (int i = 1; i <= waveletHalfLen; i++)
+   for (int i = 1; i <= waveletHalfLength; i++)
    {
       //     wavelet = np.append(wavelet, env * math.cos(2 * math.pi * fc * xs[inx]))
       float argument = 2 * pi * fCenter * i;
-      float envelope = approximateConfinedGaussian(waveletHalfLen + i);
+      float envelope = approximateConfinedGaussian(waveletHalfLength + i);
       sum += 2* envelope;
       waveletRe[i] = envelope * cos(argument);
       waveletIm[i] = envelope * sin(argument);
    }
-   float factor = 1 / sum;
+   float factor = 2 / sum; // Factor "2" bcs of one-sided spectrum
    
-   for (int i = 0; i <= waveletHalfLen; i++)
+   for (int i = 0; i <= waveletHalfLength; i++)
    {
       waveletRe[i] *= factor;
       waveletIm[i] *= factor;
@@ -76,7 +76,7 @@ ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
    
    // Calculate duration (measured in samples at current rate
    // Approximate temporal resolution is dT =  (2 * halfLen + 1) * sigma
-   duration = 2.0 * windowL *sigma;
+   duration = 2.0 * waveletLength *sigma;
    transformStep = (unsigned int)(duration * (100-overlapPercentage) / 100.0 + 0.5);
    if (transformStep < 1)
    {
@@ -87,8 +87,8 @@ ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
 
 void ConfinedGaussianWaveletVoice::dump()
 {
-   cout << "Approximate Confined Gaussian Wavelet in octave " << octave << ", windowL " << windowL <<", duration " << duration << ", step " << transformStep << endl;
-   WaveletVoice::dump();
+   cout << "Approximate Confined Gaussian Wavelet in octave " << octave << ", windowL " << waveletLength <<", duration " << duration << ", step " << transformStep << endl;
+   WaveletVoiceUnbuffered::dump();
 }
 
 ConfinedGaussianWaveletVoice::~ConfinedGaussianWaveletVoice()
@@ -98,13 +98,13 @@ ConfinedGaussianWaveletVoice::~ConfinedGaussianWaveletVoice()
 
 float ConfinedGaussianWaveletVoice::gaussian(float x)
 {
-   float argument = (x - waveletHalfLen) / 2 / windowL / sigma;
+   float argument = (x - waveletHalfLength) / 2 / waveletLength / sigma;
    return exp(- argument * argument);
 }
 
 float ConfinedGaussianWaveletVoice::approximateConfinedGaussian(float x)
 {
-   return gaussian(x) - gaussian(-0.5) * (gaussian(x + windowL) + gaussian(x - windowL)) / (gaussian(-0.5 + windowL) + gaussian(-0.5 - windowL));
+   return gaussian(x) - gaussian(-0.5) * (gaussian(x + waveletLength) + gaussian(x - waveletLength)) / (gaussian(-0.5 + waveletLength) + gaussian(-0.5 - waveletLength));
 }
 
 void ConfinedGaussianWaveletVoice::getFrequency(double & freq, double & bw) const

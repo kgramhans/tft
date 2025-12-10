@@ -30,33 +30,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 WaveletVoice::WaveletVoice(const float overlapPercentage,
                            const DyadicFilter * dFilter,
                            const double fCenter) :
-   dyadicFilter(dFilter),
-   octave(0),
-   resultLen(0),
-   overlap(overlapPercentage),
-   waveletHalfLen(0),
-   duration(0),
-   transformLength(0),
-   resultStep(0),
-   frequency(fCenter)
+   WaveletVoiceUnbuffered(overlapPercentage, dFilter, fCenter)
 {}
 
 void WaveletVoice::dump()
 {
-   for (int i = 0; i <= waveletHalfLen; i++)
-   {
-//      cout << i << " : " << waveletRe[i] << ", " << waveletIm[i] << endl;
-   }
 }
 
 WaveletVoice::~WaveletVoice()
 {
-   if(waveletHalfLen)
-   {
-      delete[]waveletRe;
-      delete[]waveletIm;
-      waveletHalfLen=0;
-   }
    if(resultLen)
    {
       delete[]resultRe;
@@ -65,33 +47,6 @@ WaveletVoice::~WaveletVoice()
    }
 }
    
-void WaveletVoice::getRequiredPaddingSamples(unsigned int & pre, unsigned int & post) const
-{
-   // We need WaveletHalfLen samples from the LP filter before and WaveletHalfLen+1 after
-   // These numbers must be multiplied by 1<<octave. Additionally, we must add requirement from LP filter
-   assert(waveletHalfLen); // Must be initialised by derived constructor
-   assert(transformLength);
-   assert(resultLen);
-   assert(resultStep > 0);
-   pre = (waveletHalfLen << octave) + dyadicFilter->getExtraSamples(octave);
-   post = pre + resultLen * resultStep - transformLength;
-}
-
-pair<unsigned int, unsigned int> WaveletVoice::calculateResultLenAndStep(unsigned int _resolution) const
-{
-   assert(transformLength);
-   unsigned int resultStep = std::max(transformStep, (_resolution / 2) >> octave ) << octave; // Be more conservative internally with resolution
-   unsigned int rval = 1 + (transformLength - 1) / resultStep;
-   int remaining = (transformLength - 1) - (rval -1) * resultStep;
-   while (2 * remaining >= (long) resultStep)
-   {
-      remaining -= resultStep;
-      assert(2 * remaining < (long) resultStep);
-      rval++;
-   }
-   return pair<unsigned int, unsigned int>(rval, resultStep);
-}
-
 void WaveletVoice::allocateResult(unsigned int nSamples, unsigned int _resolution)
 {
    if (resultLen)
@@ -125,7 +80,7 @@ int WaveletVoice::transform()
    assert(resultStep);
    
    // Simply step through data until result is full!
-   pair<TF_DATA_TYPE *, unsigned int> rval = dyadicFilter->getSamples(octave, -(waveletHalfLen << octave));
+   pair<TF_DATA_TYPE *, unsigned int> rval = dyadicFilter->getSamples(octave, -(waveletHalfLength << octave));
    if (rval.second == 0)
    {
       for (int i = resultLen; i--;)
@@ -137,7 +92,7 @@ int WaveletVoice::transform()
 
    TF_DATA_TYPE * ptRe = resultRe;
    TF_DATA_TYPE * ptIm = resultIm;
-   TF_DATA_TYPE * ptS = rval.first + waveletHalfLen;
+   TF_DATA_TYPE * ptS = rval.first + waveletHalfLength;
    size_t Sstep = resultStep >> octave;
    for (int inx = 0; inx < resultLen; inx++)
    {
@@ -147,7 +102,7 @@ int WaveletVoice::transform()
       TF_DATA_TYPE * ptWIm = waveletIm + 1;
       TF_DATA_TYPE sumRe = *waveletRe * *ptS;
       TF_DATA_TYPE sumIm = 0;
-      for (int j = waveletHalfLen; j--;)
+      for (int j = waveletHalfLength; j--;)
       {
          sumRe += (*ptL   + *ptR  ) * *ptWRe++;
          sumIm += (*ptL-- - *ptR++) * *ptWIm++;

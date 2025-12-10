@@ -68,7 +68,7 @@ WaveletCalculator::~WaveletCalculator()
     unsigned int post(0);
     nPre = 0;
     nPost = 0;
-    for (vector<WaveletVoice *>::const_iterator iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
+    for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
     {
        (*iter)->getRequiredPaddingSamples(pre, post);
        nPre = max(pre, nPre);
@@ -102,7 +102,7 @@ WaveletCalculator::~WaveletCalculator()
     
     // And then ask all voices to co-operate
     unsigned int rval = 0;
-    for (vector<WaveletVoice *>::iterator iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
+    for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
     {
        rval += (*iter)->transform();
     }
@@ -115,7 +115,7 @@ WaveletCalculator::~WaveletCalculator()
 void  WaveletCalculator::prepare(unsigned int n_samples, unsigned int resolution, unsigned int & nPre, unsigned int & nPost)
  {
     nSamples = n_samples;
-    for (vector<WaveletVoice *>::iterator iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
+    for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
     {
        (*iter)->allocateResult(nSamples, resolution);
     }
@@ -184,11 +184,11 @@ void  WaveletCalculator::prepare(unsigned int n_samples, unsigned int resolution
        }
 
        // Locate the voice closest to the asked-for frequency
-       const WaveletVoice * pVoice = NULL;
+       const WaveletBaseClass * pVoice = NULL;
        double bestLogDist = 999;
        double bwBest, freqBest;
        
-       for (vector<WaveletVoice *>::const_iterator iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
+       for (auto iter = waveletVoices.cbegin(); iter != waveletVoices.cend(); iter++)
        {
           double freq;
           double bw;

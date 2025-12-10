@@ -14,6 +14,7 @@ StftCalculator.cpp StftCalculator.h
 TimeFrequencyCalculator.h
 DyadicFilter.cpp DyadicFilter.h
 WaveletVoice.h WaveletVoice.cpp
+WaveletVoiceUnbuffered.h WaveletVoiceUnbuffered.cpp
 ConfinedGaussianWaveletVoice.h ConfinedGaussianWaveletVoice.cpp
 RealFFTf.h RealFFTf.cpp
 )

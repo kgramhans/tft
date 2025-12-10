@@ -27,39 +27,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define WaveletVoice_h
 
 #include "DyadicFilter.h"
+#include "WaveletVoiceUnbuffered.h"
 
-class WaveletVoice
+class WaveletVoice : public WaveletVoiceUnbuffered
 {
 public:
-   virtual void dump();
+   virtual void dump() override;
    virtual ~WaveletVoice();
-   void getRequiredPaddingSamples(unsigned int & pre, unsigned int & post) const;
-   virtual void allocateResult(unsigned int nSamples, unsigned int resolution);
-   int transform();
-   TF_DATA_TYPE get(double timestamp) const;
-   virtual void getFrequency(double & freq, double & bw) const = 0;
+   virtual void allocateResult(unsigned int nSamples, unsigned int resolution) override;
+   int transform() override;
+   TF_DATA_TYPE get(double timestamp) const override;
 
 protected:
    WaveletVoice(const float overlapPercentage,
                 const DyadicFilter * dFilter,
                 const double fCenter);
-   pair<unsigned int, unsigned int>  calculateResultLenAndStep(unsigned int _resolution) const;
-
-   
-   const DyadicFilter * dyadicFilter;
-   unsigned int octave;
-   TF_DATA_TYPE * waveletRe;
-   TF_DATA_TYPE * waveletIm;
    TF_DATA_TYPE * resultRe;
    TF_DATA_TYPE * resultIm;
-   unsigned int waveletHalfLen;
-   unsigned int resultLen;
-   const float overlap;
-   float duration;
-   unsigned int transformStep;
-   unsigned int resultStep;
-   unsigned int transformLength;
-   double frequency;
 };
 
 #endif /* WaveletVoice_h */

@@ -135,7 +135,7 @@ public:
 
 private:
    DyadicFilter dyadicFilter;
-   vector<WaveletVoice *> waveletVoices;
+   vector<WaveletBaseClass *> waveletVoices;
    unsigned int nSamples;
    
    /**
