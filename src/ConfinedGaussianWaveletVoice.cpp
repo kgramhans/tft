@@ -30,9 +30,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using namespace std;
 
 ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
+                 double flow,
+                 double fhigh,
                 double Q,
                 const float overlapPercentage,
-                const DyadicFilter * dFilter) : WaveletBaseClass(overlapPercentage, dFilter, fCenter), q(Q)
+                const DyadicFilter * dFilter) : WaveletBaseClass(overlapPercentage, dFilter, fCenter, flow, fhigh), q(Q)
 {
    // When constructing, firstly let us know about the upper frequency limit by the wavelet to be defined
    assert(fCenter > 0 && fCenter <= 0.5);
@@ -85,9 +87,9 @@ ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
 }
 
 
-void ConfinedGaussianWaveletVoice::dump()
+void ConfinedGaussianWaveletVoice::dump() const
 {
-   cout << "Approximate Confined Gaussian Wavelet in octave " << octave << ", windowL " << waveletLength <<", duration " << duration << ", step " << transformStep << endl;
+   cout << "Approximate Confined Gaussian Wavelet in octave " << octave << ", windowL " << waveletLength <<", duration " << duration << ", step " << transformStep << "[ " << fLow << "; " << frequency << "; " << fHigh << " ]" << endl;
    WaveletVoiceUnbuffered::dump();
 }
 

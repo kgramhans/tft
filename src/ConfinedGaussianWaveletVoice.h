@@ -28,7 +28,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "WaveletVoice.h"
 
-using WaveletBaseClass = WaveletVoice; // Two possibilities here: WaveletVoice is faster, WaveletVoiceUnbuffered uses less memory. Optimal choice depends on usage scenario
+using WaveletBaseClass = WaveletVoiceUnbuffered; // Two possibilities here: WaveletVoice is faster, WaveletVoiceUnbuffered uses less memory. Optimal choice depends on usage scenario
 class ConfinedGaussianWaveletVoice : public WaveletBaseClass
 {
 public:
@@ -62,10 +62,12 @@ public:
     
     */
    ConfinedGaussianWaveletVoice(double fCenter,
+                 double flow,
+                 double fhigh,
                 double Q,
                 const float overlapPercentage,
                 const DyadicFilter * dFilter);
-   virtual void dump() override;
+   virtual void dump() const override;
    virtual void getFrequency(double & freq, double & bw) const override;
    virtual ~ConfinedGaussianWaveletVoice();
 protected:

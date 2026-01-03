@@ -26,7 +26,6 @@ WaveletCalculator::WaveletCalculator(unsigned int nOctaves,
                                      float Q,
                                      float overlapPercentage) : dyadicFilter(nOctaves), nSamples(0)
 {
-   std::cerr << __FILE__ << ", Construct" << std::endl;
    assert(nOctaves > 0);
    assert(fmax > 0 && fmax <= 0.5);
    assert(Q > 0);
@@ -36,16 +35,17 @@ WaveletCalculator::WaveletCalculator(unsigned int nOctaves,
    float increment = (Q - 0.5) / (Q + 0.5 - overlapPercentage/100) ;
    assert(increment < 1); //Avoid recursion
    
-   float fCenter = fmax;  // Place first filter as high as possible
+   double fCenter = fmax;  // Place first filter as high as possible
+   double flo = fCenter * std::sqrt(increment);
+   double fhi = flo / increment;
    int nVoices = (int)(nOctaves * std::log(2) /( -std::log(increment)));
-   for (int i = nVoices; i--; fCenter *= increment)
+   for (int i = nVoices; i--; fCenter *= increment, fhi = flo, flo *= increment)
    {
-      cout << "Making wavelet at fc " << fCenter << endl;
-      waveletVoices.push_back(new ConfinedGaussianWaveletVoice(fCenter, Q, overlapPercentage, &dyadicFilter));
+      assert(fhi > fCenter);
+      assert(fCenter > flo);
+      waveletVoices.push_back(new ConfinedGaussianWaveletVoice(fCenter, flo, fhi, Q, overlapPercentage, &dyadicFilter));
       waveletVoices.back()->dump();
-      
    }
-   cout << "Total of " << waveletVoices.size() << " wavelets in " << nOctaves << " Octaves. Q is " << Q << endl;
 }
 
 WaveletCalculator::~WaveletCalculator()
@@ -55,7 +55,6 @@ WaveletCalculator::~WaveletCalculator()
       delete waveletVoices.back();
       waveletVoices.pop_back();
    }
-   std::cerr << __FILE__ << ", Destruct" << std::endl;
 }
 
 /**
@@ -126,6 +125,47 @@ void  WaveletCalculator::prepare(unsigned int n_samples, unsigned int resolution
     dyadicFilter.doAllocation(nSamples, nPre, nPost);
  }
 
+int WaveletCalculator::prepareSequences(const TF_DATA_TYPE* pSamples,
+                             unsigned int nSamples,
+                             unsigned int nValidSamplesBefore,
+                             unsigned int nValidSamplesAfter,
+                             const std::vector<double> & timestamps,
+                             size_t nFrequencies,
+                             bool transpose,
+                             TF_DATA_TYPE *  out)
+{
+   sequenceParameters.timeIterBegin = timestamps.cbegin();
+   sequenceParameters.timeIterEnd = timestamps.cend();
+   sequenceParameters.frequencyStride = (int)nFrequencies;
+   sequenceParameters.timeStride = (int)timestamps.size();
+   sequenceParameters.out = out;
+   sequenceParameters.transpose = transpose;
+  
+   // Iterate our wavelet collection and assign responsibilities using frequencyIntervals pairs
+   
+   // reset output map
+   memset(out, 0, sizeof(TF_DATA_TYPE) * nFrequencies * timestamps.size());
+   
+   // Process samples into dyadic filter - otherwise parallel work is not possible
+   unsigned int pre, post;
+   prepare(nSamples, 0, pre, post); // Here we prepare without limiting resolution. If prepare was already called with limiting resolution, such resolution will be preserved
+   // Feed data into our dyadic filter
+   dyadicFilter.filterSamples(pSamples, nSamples, nValidSamplesBefore, nValidSamplesAfter);
+
+   return (int) waveletVoices.size();  // All must do some work
+}
+
+/**
+ Execute a given sequence as prepared above. Sequences can be executed in any order, even parallel
+ @param iSequence ranges from 0 to number of sequences minus 1
+ */
+void WaveletCalculator::executeSequence(int iSequence)
+{
+   waveletVoices[iSequence]->executeSequence(sequenceParameters.frequencyStride, sequenceParameters.timeStride, sequenceParameters.out, sequenceParameters.timeIterBegin, sequenceParameters.timeIterEnd, sequenceParameters.transpose);
+}
+
+
+
 /** Member functions for obtaining discrete values of the underlying transform. This discretization happens in the continuous time/frequency plane and a number of schemes can apply. Such methods must be defined or implied during creation of specific instances implementing this interface
  1) Some method for interpolation between transform values. In its simples form: Choose closest neighbour. More advanced could be using 2D splines
  2) Some scheme of normalisation. We here assume that the instantaneous level is returned (numerical value). For STFT or constant Q, this can be seen as instantaneous RMS level of a given frequency component.
@@ -175,39 +215,21 @@ void  WaveletCalculator::prepare(unsigned int n_samples, unsigned int resolution
        }
        // Consider some out-of-range frequencies
        assert(*iterFreq <= 0.5);
-       if (*iterFreq <= 0.0) {
-          for (int i = 0; i < timestamps.size(); i++)
-          {
-             *pOut = 0;
-             pOut += outIncrement;
-          }
-          continue;
-       }
 
        // Locate the voice closest to the asked-for frequency
        const WaveletBaseClass * pVoice = NULL;
-       double bestLogDist = 999;
-       double bwBest, freqBest;
        
        for (auto iter = waveletVoices.cbegin(); iter != waveletVoices.cend(); iter++)
        {
-          double freq;
-          double bw;
-          double dist;
-          (*iter)->getFrequency(freq, bw);
-          dist = std::abs(std::log(freq / *iterFreq));
-          if (dist < bestLogDist)
+          if ((*iter)->containsFrequency(*iterFreq))
           {
-             freqBest = freq;
-             bwBest = bw;
-             bestLogDist = dist;
              pVoice = *iter;
+             break;
           }
        }
-       assert(pVoice);
        
        // Maybe we are not within range
-       if (std::abs(*iterFreq - freqBest) > 0.5* bwBest) {
+       if (!pVoice) {
           for (int i = 0; i < timestamps.size(); i++)
           {
              *pOut = 0;

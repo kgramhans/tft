@@ -74,6 +74,27 @@ public:
     @param nPost will on return hold the context required after end of samples
     */
    virtual void  prepare(unsigned int nSamples, unsigned int resolution, unsigned int & nPre, unsigned int & nPost) override;
+
+   virtual int prepareSequences(const TF_DATA_TYPE* pSamples,
+                                unsigned int nSamples,
+                                unsigned int nValidSamplesBefore,
+                                unsigned int nValidSamplesAfter,
+                                const std::vector<double> & timestamps,
+                                size_t nFrequencies,
+                                bool transpose,
+                                TF_DATA_TYPE *  out) override
+   {
+      doTransform(pSamples, nSamples, nValidSamplesBefore, nValidSamplesAfter);
+      ITimeFrequencyCalculator::extractFrequencySlices(timestamps, 0, 0.5 / nFrequencies, (int) nFrequencies, out, (int)(timestamps.size() * nFrequencies), transpose);
+      return 0;
+   }
+   
+   /**
+    Execute a given sequence as prepared above. Sequences can be executed in any order, even parallel
+    @param iSequence ranges from 0 to number of sequences minus 1
+    */
+   virtual void executeSequence(int iSequence) override {};
+
    
    /** Member functions for obtaining discrete values of the underlying transform. This discretization happens in the continuous time/frequency plane and a number of schemes can apply. Such methods must be defined or implied during creation of specific instances implementing this interface
     1) Some method for interpolation between transform values. In its simples form: Choose closest neighbour. More advanced could be using 2D splines

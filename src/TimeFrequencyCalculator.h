@@ -96,6 +96,34 @@ public:
     */
    virtual unsigned int  doTransform(const TF_DATA_TYPE* pSamples, unsigned int nSamples, unsigned int nValidSamplesBefore, unsigned int nValidSamplesAfter) = 0;
    
+   /**
+    Prepare for parallel execution
+    This may imply
+    1) Setting up structures internally
+    2) Doing a synopsis (pre calculations)
+    3) Returning number of sequences
+    
+    The sequences are prepared to return data directly to our result array
+    @param timestamps is a vector holding timestamps to process (ranging from 0 to nSamples-1)
+    @param nFrequencises is the number of divisions on frequency axis
+    @param transpose determines how to pack out array
+    @param out is where results will eventually end up
+    */
+   virtual int prepareSequences(const TF_DATA_TYPE* pSamples,
+                                unsigned int nSamples,
+                                unsigned int nValidSamplesBefore,
+                                unsigned int nValidSamplesAfter,
+                                const std::vector<double> & timestamps,
+                                size_t nFrequencies,
+                                bool transpose,
+                                TF_DATA_TYPE *  out) = 0;
+   
+   /**
+    Execute a given sequence as prepared above. Sequences can be executed in any order, even parallel
+    @param iSequence ranges from 0 to number of sequences minus 1
+    */
+   virtual void executeSequence(int iSequence) = 0;
+   
    /** Member functions for obtaining discrete values of the underlying transform. This discretization happens in the continuous time/frequency plane and a number of schemes can apply. Such methods must be defined or implied during creation of specific instances implementing this interface
     1) Some method for interpolation between transform values. In its simples form: Choose closest neighbour. More advanced could be using 2D splines
     2) Some scheme of normalisation. We here assume that the instantaneous level is returned (numerical value). For STFT or constant Q, this can be seen as instantaneous RMS level of a given frequency component.

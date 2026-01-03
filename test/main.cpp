@@ -19,6 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <iomanip>
 #include <chrono>
 #include <random>
+#include <assert.h>
+
 #include "../src/StftCalculator.h"
 #include "../src/WaveletCalculator.h"
 #include "../src/DyadicFilter.h"
@@ -28,14 +30,16 @@ using namespace chrono;
 int main() {
     std::cout << "Hello World!" << std::endl;
 
-#define LEN 10000
-#define FLEN 32
+#define LEN 100
+#define FLEN 256
+#define DELTA 12
 #define OUT_LEN (LEN*FLEN)
    float spike[LEN];
    float out[OUT_LEN];
+   float out2[OUT_LEN];
    memset(spike, 0, sizeof(float) * (LEN));
    memset(out, 0, sizeof(float) * (OUT_LEN));
-   for (int i = 0; i < LEN; i++)
+   for (int i = 0; i < 0*LEN; i++)
    {
       switch (i % 4)
       {
@@ -53,7 +57,7 @@ int main() {
             break;
       }
    }
-//   spike[LEN/2] = 10.0;
+   spike[LEN/2] = 10.0;
 
    /**==================**/
    DyadicFilter * pFilter;
@@ -79,11 +83,15 @@ int main() {
    pFilter = new DyadicFilter(10);
    pFilter->doAllocation(LEN, 20000, 21000);
    pFilter->filterSamples(spike, LEN, 0, 0);
-   ConfinedGaussianWaveletVoice wavelet(0.001, 8.7, 0, pFilter);
+   ConfinedGaussianWaveletVoice wavelet(0.001, 0.0005, 0.002, 8.7, 0, pFilter);
    wavelet.allocateResult(LEN,0);
    wavelet.transform();
    wavelet.dump();
-   ConfinedGaussianWaveletVoice wavelet2(0.5, 8.7, 0, pFilter);
+   vector<double> timestamps(LEN);
+   std::iota(timestamps.begin(), timestamps.end(), 0);
+   wavelet.executeSequence(FLEN, LEN, out, timestamps.cbegin(), timestamps.cend(), true);
+   wavelet.executeSequence(FLEN, LEN, out, timestamps.cbegin(), timestamps.cend(), false);
+   ConfinedGaussianWaveletVoice wavelet2(0.5, 0.45, 0.55, 8.7, 0, pFilter);
    wavelet2.allocateResult(LEN,0);
    wavelet2.transform();
    wavelet2.dump();
@@ -100,7 +108,7 @@ int main() {
    {
       window[i] = 1;
    }
-   ITimeFrequencyCalculator * stft = new StftCalculator(8, 2 * FLEN, window);
+   ITimeFrequencyCalculator * stft = new StftCalculator(4, 2 * FLEN, window);
    stft->doTransform(spike, LEN, 0, 0);
    stft->extractFrequencySlices(0, 1.0, LEN, 0.1, 0.3/FLEN, FLEN, out, OUT_LEN, false);
    delete stft;
@@ -109,7 +117,7 @@ int main() {
    double total1 = 0;
    for (int finx = FLEN; finx--; )
    {
-      for (int tinx = LEN/2 - 10; tinx < LEN/2 + 10; tinx++)
+      for (int tinx = LEN/2 - DELTA; tinx < LEN/2 + DELTA; tinx++)
       {
          std::cout << out[finx*LEN + tinx] << ", ";
          total1 += out[finx*LEN + tinx];
@@ -155,7 +163,7 @@ int main() {
    double total2 = 0;
    for (int finx = FLEN; finx--; )
    {
-      for (int tinx = LEN/2 - 10; tinx < LEN/2 + 10; tinx++)
+      for (int tinx = LEN/2 - DELTA; tinx < LEN/2 + DELTA; tinx++)
       {
          std::cout << out[finx*LEN + tinx] << ", ";
          total2 += out[finx*LEN + tinx];
@@ -164,7 +172,33 @@ int main() {
    }
    
    cout << "Totals " << total1 << " / " << total2 << endl;
+   
+   int N = wc->prepareSequences(spike, LEN, 0, 0, timestamps, FLEN, false, out2);
+   for (int n = 0; n < N; n++)
+   {
+      wc->executeSequence(n);
+   }
+   
+   // Write out comparison map
+   cout << std::fixed << std::setprecision(10);
+   for (int finx = FLEN; finx--; )
+   {
+      for (int tinx = LEN/2 + DELTA - 1; tinx >= LEN/2 - DELTA; tinx--)
+      {
+//         cout << tinx << ", " << finx << "(" << finx*LEN + tinx << "): " << out[finx*LEN + tinx] << ", " << out2[finx*LEN + tinx] << endl;
+      }
+   }
 
+   // Proove the same result as direct calculation
+   for (int finx = FLEN; finx--; )
+   {
+      for (int tinx = LEN/2 - DELTA; tinx < LEN/2 + DELTA; tinx++)
+      {
+         assert(out[finx*LEN + tinx] == out2[finx*LEN + tinx]);
+      }
+   }
+
+   
    // Reuse calculator for a shorter sequence. This is OK, although not efficient
    nb = wc->doTransform(spike, LEN/2, 0, 0);
    cout << "Transform of " << LEN/2 << " samples with overlap " << overlap << " gave " << nb << " points in t/f plane" << endl;

@@ -30,11 +30,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 WaveletVoice::WaveletVoice(const float overlapPercentage,
                            const DyadicFilter * dFilter,
-                           const double fCenter) :
-   WaveletVoiceUnbuffered(overlapPercentage, dFilter, fCenter)
+                           const double fCenter,
+                           double flow,
+                           double fhigh) :
+   WaveletVoiceUnbuffered(overlapPercentage, dFilter, fCenter, flow, fhigh)
 {}
 
-void WaveletVoice::dump()
+void WaveletVoice::dump() const
 {
 }
 
@@ -42,8 +44,7 @@ WaveletVoice::~WaveletVoice()
 {
    if(resultLen)
    {
-      delete[]resultRe;
-      delete[]resultIm;
+      delete[]resultSqr;
       resultLen=0;
    }
 }
@@ -61,8 +62,7 @@ void WaveletVoice::allocateResult(unsigned int nSamples, unsigned int _resolutio
             return; // We are good
          }
       }
-      delete[]resultRe;
-      delete[]resultIm;
+      delete[]resultSqr;
       resultLen=0;
       transformLength = 0;
       resultStep = 0;
@@ -71,8 +71,7 @@ void WaveletVoice::allocateResult(unsigned int nSamples, unsigned int _resolutio
    assert(resultLen == 0);
    transformLength = nSamples;
    tie(resultLen, resultStep) = calculateResultLenAndStep(_resolution);
-   resultRe = new TF_DATA_TYPE[resultLen];
-   resultIm = new TF_DATA_TYPE[resultLen];
+   resultSqr = new TF_DATA_TYPE[resultLen];
 }
    
 int WaveletVoice::transform()
@@ -86,13 +85,12 @@ int WaveletVoice::transform()
    {
       for (int i = resultLen; i--;)
       {
-         resultRe[i] = resultIm[i] = 0.0;
+         resultSqr[i] = 0.0;
       }
       return resultLen;
    }
 
-   TF_DATA_TYPE * ptRe = resultRe;
-   TF_DATA_TYPE * ptIm = resultIm;
+   TF_DATA_TYPE * ptSqr = resultSqr;
    TF_DATA_TYPE * ptS = rval.first + waveletHalfLength;
    size_t Sstep = resultStep >> octave;
    for (int inx = 0; inx < resultLen; inx++)
@@ -108,8 +106,7 @@ int WaveletVoice::transform()
          sumRe += (*ptL   + *ptR  ) * *ptWRe++;
          sumIm += (*ptL-- - *ptR++) * *ptWIm++;
       }
-      *ptRe++ = sumRe;
-      *ptIm++ = sumIm;
+      *ptSqr++ = sumRe * sumRe + sumIm * sumIm;
       ptS +=  Sstep;
       
       // Verify consistency in allocations
@@ -133,6 +130,6 @@ TF_DATA_TYPE WaveletVoice::get(double timestamp) const
    assert(inx < resultLen);
       
    // No interpolation, no rounding - just plain get it as easy as possible
-   return resultRe[inx] * resultRe[inx] + resultIm[inx] * resultIm[inx];
+   return resultSqr[inx];
 }
    

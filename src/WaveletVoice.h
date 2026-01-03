@@ -32,7 +32,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 class WaveletVoice : public WaveletVoiceUnbuffered
 {
 public:
-   virtual void dump() override;
+   virtual void dump() const override;
    virtual ~WaveletVoice();
    virtual void allocateResult(unsigned int nSamples, unsigned int resolution) override;
    int transform() override;
@@ -41,9 +41,10 @@ public:
 protected:
    WaveletVoice(const float overlapPercentage,
                 const DyadicFilter * dFilter,
-                const double fCenter);
-   TF_DATA_TYPE * resultRe;
-   TF_DATA_TYPE * resultIm;
+                const double fCenter,
+                double flow,
+                double fhigh);
+   TF_DATA_TYPE * resultSqr;
 };
 
 #endif /* WaveletVoice_h */

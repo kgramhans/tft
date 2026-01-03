@@ -101,6 +101,21 @@ public:
     */
    virtual void  prepare(unsigned int nSamples, unsigned int resolution, unsigned int & nPre, unsigned int & nPost) override;
    
+   virtual int prepareSequences(const TF_DATA_TYPE* pSamples,
+                                unsigned int nSamples,
+                                unsigned int nValidSamplesBefore,
+                                unsigned int nValidSamplesAfter,
+                                const std::vector<double> & timestamps,
+                                size_t nFrequencies,
+                                bool transpose,
+                                TF_DATA_TYPE *  out) override;
+   
+   /**
+    Execute a given sequence as prepared above. Sequences can be executed in any order, even parallel
+    @param iSequence ranges from 0 to number of sequences minus 1
+    */
+   virtual void executeSequence(int iSequence) override;
+   
    /** Member functions for obtaining discrete values of the underlying transform. This discretization happens in the continuous time/frequency plane and a number of schemes can apply. Such methods must be defined or implied during creation of specific instances implementing this interface
     1) Some method for interpolation between transform values. In its simples form: Choose closest neighbour. More advanced could be using 2D splines
     2) Some scheme of normalisation. We here assume that the instantaneous level is returned (numerical value). For STFT or constant Q, this can be seen as instantaneous RMS level of a given frequency component.
@@ -134,6 +149,14 @@ public:
    
 
 private:
+   struct {
+      int frequencyStride;
+      int timeStride;
+      TF_DATA_TYPE * out;
+      std::vector<double>::const_iterator timeIterBegin;
+      std::vector<double>::const_iterator timeIterEnd;
+      bool transpose;
+   } sequenceParameters;
    DyadicFilter dyadicFilter;
    vector<WaveletBaseClass *> waveletVoices;
    unsigned int nSamples;

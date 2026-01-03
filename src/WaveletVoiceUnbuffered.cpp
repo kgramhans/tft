@@ -27,10 +27,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <iostream>
 #include <assert.h>
 #include <tuple>
+#include <cmath>
 
 WaveletVoiceUnbuffered::WaveletVoiceUnbuffered(const float overlapPercentage,
                            const DyadicFilter * dFilter,
-                           const double fCenter) :
+                           double fCenter,
+                           double flow,
+                           double fhigh) :
    dyadicFilter(dFilter),
    octave(0),
    resultLen(0),
@@ -39,10 +42,13 @@ WaveletVoiceUnbuffered::WaveletVoiceUnbuffered(const float overlapPercentage,
    duration(0),
    transformLength(0),
    resultStep(0),
-   frequency(fCenter)
-{}
+   frequency(fCenter),
+   fLow(flow),
+   fHigh(fhigh)
+{
+}
 
-void WaveletVoiceUnbuffered::dump()
+void WaveletVoiceUnbuffered::dump() const
 {
 }
 
@@ -87,6 +93,7 @@ void WaveletVoiceUnbuffered::allocateResult(unsigned int nSamples, unsigned int 
 {
    transformLength = nSamples;
    tie(resultLen, resultStep) = calculateResultLenAndStep(_resolution);
+   valueCache.invalidate();
 }
    
 int WaveletVoiceUnbuffered::transform()
@@ -107,6 +114,12 @@ TF_DATA_TYPE WaveletVoiceUnbuffered::get(double timestamp) const
    {
       return 0;
    }
+   
+   TF_DATA_TYPE val;
+   if (valueCache.lookup(rval.first, val))
+   {
+      return val;
+   }
 
    TF_DATA_TYPE * ptS = rval.first + waveletHalfLength;
    TF_DATA_TYPE * ptR = ptS + 1;
@@ -122,6 +135,54 @@ TF_DATA_TYPE WaveletVoiceUnbuffered::get(double timestamp) const
    }
    assert(ptL - rval.first >= -1);
    assert(ptR - rval.first <= rval.second);
-   return sumRe * sumRe + sumIm * sumIm;
+   val = sumRe * sumRe + sumIm * sumIm;
+   valueCache.set(rval.first, val);
+   return val;
 }
+
+
+void WaveletVoiceUnbuffered::executeSequence(int freqStride, int timeStride, TF_DATA_TYPE * out, std::vector<double>::const_iterator timeIterBegin, std::vector<double>::const_iterator timeIterEnd, bool transpose)
+{
+   transform();
+   valueCache.invalidate();
+   // We now iterate all timestamps in the sequence and place values in the result buffer. A single timestamp may fill one or more frequencies
+   // If not transposed, "out" will contain values for first frequency, then values for second frequency ... finally values for "freqStride'th frequency
+   // If transposed, "out" will contain values for first timestamp (length freqStride), then values for second timestamp (length freqStrid) etc
+   // Finally, iterate all timestamps
+   
+   int firstFreqInx = (int)std::ceil(2 * fLow * freqStride);
+   int lastFreqInx = (int)std::floor(2 * fHigh * freqStride);
+   if (lastFreqInx >= freqStride)
+      lastFreqInx = freqStride - 1;
+   if (lastFreqInx < firstFreqInx) return;
+   if (transpose)
+   {
+      TF_DATA_TYPE * pOut = out;
+      for (auto iterTime = timeIterBegin; iterTime != timeIterEnd; iterTime++)
+      {
+         assert(*iterTime <= transformLength - 1);
+         TF_DATA_TYPE val = get(*iterTime);
+         for (auto inx = firstFreqInx; inx <= lastFreqInx; inx++ )
+         {
+            pOut[inx] = val;
+         }
+         pOut += freqStride;
+      }
+   }
+   else
+   {
+      TF_DATA_TYPE * pOut = out;
+      for (auto iterTime = timeIterBegin; iterTime != timeIterEnd; iterTime++)
+      {
+         assert(*iterTime <= transformLength - 1);
+         TF_DATA_TYPE val = get(*iterTime);
+         for (auto inx = firstFreqInx; inx <= lastFreqInx; inx++ )
+         {
+            pOut[inx * timeStride] = val;
+         }
+         pOut++;
+      }
+   }
+}
+
    

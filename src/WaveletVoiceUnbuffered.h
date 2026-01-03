@@ -27,22 +27,27 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define WaveletVoiceUnbuffered_h
 
 #include "DyadicFilter.h"
+#include <vector>
 
 class WaveletVoiceUnbuffered
 {
 public:
-   virtual void dump();
+   virtual void dump() const;
    virtual ~WaveletVoiceUnbuffered();
    virtual void getRequiredPaddingSamples(unsigned int & pre, unsigned int & post) const;
    virtual void allocateResult(unsigned int nSamples, unsigned int resolution);
    virtual int transform();
    virtual TF_DATA_TYPE get(double timestamp) const;
    virtual void getFrequency(double & freq, double & bw) const = 0;
+   bool containsFrequency(double f) { return f >= fLow && f < fHigh;}
+   void executeSequence(int freqStride, int timeStride, TF_DATA_TYPE * out, std::vector<double>::const_iterator timeIterBegin, std::vector<double>::const_iterator timeIterEnd, bool transpose);
 
 protected:
    WaveletVoiceUnbuffered(const float overlapPercentage,
                 const DyadicFilter * dFilter,
-                const double fCenter);
+                double fCenter,
+                double flow,
+                double fhigh);
    virtual pair<unsigned int, unsigned int>  calculateResultLenAndStep(unsigned int _resolution) const;
 
    
@@ -58,6 +63,25 @@ protected:
    unsigned int resultStep;
    unsigned int transformLength;
    double frequency;
+   double fLow;
+   double fHigh;
+   mutable struct
+   {
+      const void * key;
+      TF_DATA_TYPE value;
+      void invalidate(){ key = NULL;};
+      void set(const void * k, TF_DATA_TYPE val)
+      {
+         key = k;
+         value = val;
+      } const
+      bool lookup(void * k, TF_DATA_TYPE & rval) const
+      {
+         if (k != key) return false;
+         rval = value;
+         return true;
+      }
+   } valueCache;
 };
 
 #endif // !WaveletVoiceUnbuffered_h
