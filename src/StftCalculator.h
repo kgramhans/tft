@@ -125,7 +125,7 @@ private:
    unsigned int nSamples;                    ///< Length of signal being investigated
    vector<TF_DATA_TYPE>  vWindow;            ///< Holds coefficients of window function properly normalized
    vector<TF_DATA_TYPE> vTransformBuffer;    ///< Buffer used to hold signal being investigated
-   unique_ptr<FFTParam> hFFT;                ///< Pointer to FFT related structures
+   unique_ptr<TFT::FFTParam> hFFT;                ///< Pointer to FFT related structures
 };
 
 

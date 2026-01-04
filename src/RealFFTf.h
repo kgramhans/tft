@@ -7,6 +7,7 @@
 
 using namespace std;
 
+namespace TFT {
 using fft_type = TF_DATA_TYPE;
 struct FFTParam {
    unique_ptr<int[]> BitReversed;
@@ -20,6 +21,7 @@ void InverseRealFFTf(fft_type *, const FFTParam *);
 void ReorderToTime(const FFTParam *hFFT, const fft_type *buffer, fft_type *TimeOut);
 void ReorderToFreq(const FFTParam *hFFT, const fft_type *buffer,
 		   fft_type *RealOut, fft_type *ImagOut);
+}
 
 #endif
 

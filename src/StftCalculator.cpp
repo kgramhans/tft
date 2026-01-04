@@ -30,7 +30,7 @@ StftCalculator::StftCalculator(unsigned int windowLength,
 {
    assert(windowLength && (ceil(log2(windowLength)) == floor(log2(windowLength))));
    assert(transformLength && (ceil(log2(transformLength)) == floor(log2(transformLength))));
-   hFFT = GetFFT(transformLength);
+   hFFT = TFT::GetFFT(transformLength);
    
    // Assure out window has mean value "1" not to add any amplification
    TF_DATA_TYPE sum = accumulate(vWindow.begin(), vWindow.end(), decltype(vWindow)::value_type(0));

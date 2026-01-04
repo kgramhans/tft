@@ -46,6 +46,8 @@
 #define	M_PI		3.14159265358979323846  /* pi */
 #endif
 
+namespace TFT {
+
 /*
 *  Initialize the Sine table and Twiddle pointers (bit-reversed pointers)
 *  for the FFT routine.
@@ -318,4 +320,6 @@ void ReorderToTime(const FFTParam *hFFT, const fft_type *buffer, fft_type *TimeO
       TimeOut[i*2  ]=buffer[hFFT->BitReversed[i]  ];
       TimeOut[i*2+1]=buffer[hFFT->BitReversed[i]+1];
    }
+}
+
 }
