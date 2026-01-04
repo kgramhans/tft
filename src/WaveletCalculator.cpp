@@ -201,7 +201,8 @@ void WaveletCalculator::executeSequence(int iSequence)
     // Do some consistency checks
     assert(nSamples);
     assert(timestamps.size() * frequencies.size() <= nOut);
-    if (timestamps.size() * frequencies.size() > nOut) {
+    if (timestamps.size() * frequencies.size() > nOut)
+    {
        return 0;
     }
     
