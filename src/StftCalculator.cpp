@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <iostream>
 #include <numeric>
 #include <cstring>
+#include <cmath>
 
 using namespace std;
 
