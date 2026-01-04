@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <iostream>
 #include <assert.h>
 #include <cmath>
+#include <cstring>
 #include "WaveletCalculator.h"
 #include "ConfinedGaussianWaveletVoice.h"
 
@@ -200,6 +201,10 @@ void WaveletCalculator::executeSequence(int iSequence)
     // Do some consistency checks
     assert(nSamples);
     assert(timestamps.size() * frequencies.size() <= nOut);
+    if (timestamps.size() * frequencies.size() > nOut)
+    {
+       return 0;
+    }
     
     // Iterate frequencies
     TF_DATA_TYPE * pOut = out;
@@ -230,7 +235,7 @@ void WaveletCalculator::executeSequence(int iSequence)
        
        // Maybe we are not within range
        if (!pVoice) {
-          for (int i = 0; i < timestamps.size(); i++)
+          for (size_t i = 0; i < timestamps.size(); i++)
           {
              *pOut = 0;
              pOut += outIncrement;

@@ -26,8 +26,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #ifndef WaveletVoiceUnbuffered_h
 #define WaveletVoiceUnbuffered_h
 
-#include "DyadicFilter.h"
+#include <stddef.h>
 #include <vector>
+
+#include "DyadicFilter.h"
 
 class WaveletVoiceUnbuffered
 {
@@ -69,12 +71,15 @@ protected:
    {
       const void * key;
       TF_DATA_TYPE value;
-      void invalidate(){ key = NULL;};
+      void invalidate()
+      {
+         key = NULL;
+      }
       void set(const void * k, TF_DATA_TYPE val)
       {
          key = k;
          value = val;
-      } const
+      }
       bool lookup(void * k, TF_DATA_TYPE & rval) const
       {
          if (k != key) return false;
