@@ -28,6 +28,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <utility>
 #include <vector>
+#include <limits>
 #include "version.h"
 
 using namespace std;
@@ -55,6 +56,9 @@ private:
    vector<TF_DATA_TYPE *> vBufferTimeZero;   // Point to location of time zero in allocated buffer
    vector<unsigned int> vBufferLengths;            // Point to total length of allocated buffer (starting from BufferBegin)
    void verify();
+   bool isNaN(TF_DATA_TYPE val) {
+      return val != val;
+   }
 
    /*
 
@@ -77,7 +81,7 @@ private:
 
    static constexpr unsigned int cstFilterTaps = 39;
    static constexpr float cstFreqLimit = 0.2;
-   static const long cstMagic;
+   static constexpr TF_DATA_TYPE cstMagic = std::numeric_limits<TF_DATA_TYPE>::signaling_NaN();
    static const TF_DATA_TYPE filter_taps[cstFilterTaps];
 };
 #endif /* DyadicFilter_h */

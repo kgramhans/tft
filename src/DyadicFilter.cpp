@@ -70,12 +70,9 @@ const TF_DATA_TYPE DyadicFilter::filter_taps[DyadicFilter::cstFilterTaps] = {
  0.0000615047460950818
 };
 
-const long DyadicFilter::cstMagic = 0xbade0abe;
-
 DyadicFilter::DyadicFilter(const unsigned int nOctaves) : vBufferBegin(nOctaves, NULL), vBufferTimeZero(nOctaves, NULL), vBufferLengths(nOctaves, 0)
 {
    assert(nOctaves);
-   int halfFilterWidth = (cstFilterTaps>> 1);
    static_assert(cstFilterTaps & 1, "Filter must have odd length");
 }
 
@@ -140,8 +137,8 @@ void DyadicFilter::doAllocation(unsigned int nSamples, unsigned int nSamplesBefo
       nSamples >>= 1;
       nSamplesAfter -= nSamples;
       
-      (*iterBufferBegin)[-1] = *(TF_DATA_TYPE *)&cstMagic;
-      (*iterBufferBegin)[allocationSize] = *(TF_DATA_TYPE *)&cstMagic;
+      (*iterBufferBegin)[-1] = cstMagic;
+      (*iterBufferBegin)[allocationSize] = cstMagic;
       memset(*iterBufferBegin, 0, sizeof(TF_DATA_TYPE) * allocationSize);
       verify();
    }
@@ -160,8 +157,8 @@ void DyadicFilter::verify()
    {
       if (*iterBufferBegin)
       {
-         assert((*iterBufferBegin)[-1] == *(TF_DATA_TYPE *)&cstMagic);
-         assert((*iterBufferBegin)[*iterBufferLength] == *(TF_DATA_TYPE *)&cstMagic);
+         assert(isNaN((*iterBufferBegin)[-1]));
+         assert(isNaN((*iterBufferBegin)[*iterBufferLength]));
       }
    }
 }

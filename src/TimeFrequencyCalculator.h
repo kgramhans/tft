@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #ifndef _TIME_FREQ_CALC_H
 #define _TIME_FREQ_CALC_H
+#include <stddef.h>
 #include <vector>
 #include <utility>
 #include "version.h"

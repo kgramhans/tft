@@ -26,7 +26,7 @@ using namespace std;
 
 StftCalculator::StftCalculator(unsigned int windowLength,
                   unsigned int transformLength,
-                  const TF_DATA_TYPE * pWindow) : nWindowLength(windowLength), nTransformLength(transformLength), vWindow(pWindow, pWindow + windowLength), nSamples(0)
+                  const TF_DATA_TYPE * pWindow) : nWindowLength(windowLength), nTransformLength(transformLength), nSamples(0), vWindow(pWindow, pWindow + windowLength)
 {
    assert(windowLength && (ceil(log2(windowLength)) == floor(log2(windowLength))));
    assert(transformLength && (ceil(log2(transformLength)) == floor(log2(transformLength))));
@@ -97,7 +97,7 @@ int StftCalculator::extractFrequencySlices(const std::vector<double> & timestamp
    vector<size_t> vFrequencyIndexTable(nTransformLength / 2);
    
    // Inspect the frequencies table
-   for (int i = 0; (i < nTransformLength / 2); i++)
+   for (unsigned int i = 0; (i < nTransformLength / 2); i++)
    {
       vFrequencyIndexTable[i] = (size_t)(nTransformLength * frequencies[i] + 0.5);
       assert(vFrequencyIndexTable[i] < nTransformLength / 2);
