@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <chrono>
 #include <random>
 #include <assert.h>
+#include <cstring>
 
 #include "../src/StftCalculator.h"
 #include "../src/WaveletCalculator.h"
