@@ -24,15 +24,15 @@ class WaveletCalculator : public ITimeFrequencyCalculator
 {
 public:
    /**
-    Setup a new wavelet time-frequemcy transform.
+    Setup a new wavelet time-frequency transform.
      
      LOWER FREQUENCY
      ================
-     Assuming nominal sampling frequncy (1.0), the lower frequency covered by the analysis will be 0.5/2^nOctaves
+     Assuming nominal sampling frequency (1.0), the lower frequency covered by the analysis will be 0.5/2^nOctaves
     
      FREQUENCY RESOLUTION
      ====================
-      Frequency Resolution (dF) will be defined as 2*RMS bandwidth of analyzing wavelet. Frequency resolution relative to actual frequency, Q = F/dF, will be found such that Q = 1/(2^(1/2nBands)-2^-(1/2nBands))
+      Frequency Resolution (dF) will be defined as 2*RMS bandwidth of analysing wavelet. Frequency resolution relative to actual frequency, Q = F/dF, will be found such that Q = 1/(2^(1/2nBands)-2^-(1/2nBands))
     
          Typical choices are
       nBands   Q
@@ -43,33 +43,33 @@ public:
 
      TEMPORAL RESOLUTION
      ===================
-      Temporal Resolution (dT) will be defined as 2*RMS duration of analyzing wavelet. Due to the application of close-to Gaussian wavelet, the Heisenberg equality holds with good approximation:
+      Temporal Resolution (dT) will be defined as 2*RMS duration of analysing wavelet. Due to the application of close-to Gaussian wavelet, the Heisenberg equality holds with good approximation:
         dF * dT = 1/PI
         dT = 1/PI/dF = Q/(PI*F)  [ie meaning Q/PI oscillations within temporal resolution]
     
-     FRAME BOUNDS (Discretization)
+     FRAME BOUNDS (Discretisation)
      =============
-         Parseval's theorem must also hold true fro a time-frequency representation of a signal. This can only be achieved as an approximation. Looking at the discretization of the constatnt Q transform, we define overlap in time and frequency domain via dT and dF, respectively. The maximum ripple contributed by the trasform (max enery lost is
+         Parseval's theorem must also hold true fro a time-frequency representation of a signal. This can only be achieved as an approximation. Looking at the discretisation of the constant Q transform, we define overlap in time and frequency domain via dT and dF, respectively. The maximum ripple contributed by the trasform (max enery lost is
                at 0% overlap : -2.2dB
                at 50% overlap in time AND frequency : 0.5 dB
     
             0% overlap in time and frequency (dF spacing in frequency, dT spacing in time)
             ==========================================================
                Nb values in 1st octave, first band : 1/dT per second. --> Approximately nBands / (Q/(PI * 0.375)) --> nBands/Q
-               Nb values in all octaves 2*nBands/Q -->3 per second at nominal sampling frequency (approximately according to aove table - just a guideline)
+               Nb values in all octaves 2*nBands/Q -->3 per second at nominal sampling frequency (approximately according to above table - just a guideline)
             
             50% overlap in time and frequency (dF/2 spacing in frequency, dT/2 spacing in time)
             ==========================================================
                 Nb values in 1st octave, first band : 2/dT per second. --> Approximately (2*nBands) *2 / (Q/(PI * 0.375)) --> 4*nBands/Q
-                Nb values in all octaves 8*nBands/Q -->12 per second at nominal sampling frequency (approximately according to aove table - just a guideline)
+                Nb values in all octaves 8*nBands/Q -->12 per second at nominal sampling frequency (approximately according to above table - just a guideline)
 
     */
    
     /**
      Construct a wavelet calculator that will divide frequency axis into nOctaves having each nBands
-      Lower frequency analyzed being equal to Fs/2/2^nOctaves
+      Lower frequency analysed being equal to Fs/2/2^nOctaves
        Example Fs = 44100Hz, 10 octaves --> 22Hz
-     @param nOctaves is the lowest range of frequencies as specifed above. Note that this should not be chosen higher than necessary since this implies larger time domain support and thus more buffering of adjoining samples (or zeropadding)
+     @param nOctaves is the lowest range of frequencies as specified above. Note that this should not be chosen higher than necessary since this implies larger time domain support and thus more buffering of adjoining samples (or zero padding)
      @param overlapPercentage defines the precision. choosing 0.5 (50% overlap) is a good starting point. For significantly more speed, a value of 0 could prove more relevant. This also consumes less memory
      */
    WaveletCalculator( unsigned int nOctaves,
@@ -116,12 +116,12 @@ public:
     */
    virtual void executeSequence(int iSequence) override;
    
-   /** Member functions for obtaining discrete values of the underlying transform. This discretization happens in the continuous time/frequency plane and a number of schemes can apply. Such methods must be defined or implied during creation of specific instances implementing this interface
+   /** Member functions for obtaining discrete values of the underlying transform. This discretisation happens in the continuous time/frequency plane and a number of schemes can apply. Such methods must be defined or implied during creation of specific instances implementing this interface
     1) Some method for interpolation between transform values. In its simples form: Choose closest neighbour. More advanced could be using 2D splines
     2) Some scheme of normalisation. We here assume that the instantaneous level is returned (numerical value). For STFT or constant Q, this can be seen as instantaneous RMS level of a given frequency component.
     3) Some method for aggregation of densely calculated transforms must exist. In its simplest form this could imply choosing level of closest neighbour. In order to avoid missing peaks, a scheme of choosing highest value in neighbourhood could be i,lied. Such schemes must be defined and documented by implementing classes
     
-    The below methods provide ways to extract values at equidistant time stamps on either linearly or arbitrarily spaced frequence intervals
+    The below methods provide ways to extract values at equidistant time stamps on either linearly or arbitrarily spaced frequency intervals
     
     @param sampleOffset is the offset from pSamples (time zero) in a previous call to doTransform() or doNextTransform(). This offset allows stitching adjoining transforms together nicely
     @param stepTime is the equidistant step between frequency slices
@@ -134,7 +134,7 @@ public:
     @param frequencies is a vector of arbitrary frequencies, each of which must be in range 0..0.5
     
     @param out is an array with space for nOut values
-    @param nOut must fulfill inequality nTimeSteps*nFreqSteps <= nOut
+    @param nOut must fulfil inequality nTimeSteps*nFreqSteps <= nOut
     The inequality    sampleOffset + stepTime*nTimeSteps < nSamples
     must always be fulfilled. Otherwise, 0 will be returned
     

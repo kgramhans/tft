@@ -96,18 +96,18 @@ public:
    virtual void executeSequence(int iSequence) override {};
 
    
-   /** Member functions for obtaining discrete values of the underlying transform. This discretization happens in the continuous time/frequency plane and a number of schemes can apply. Such methods must be defined or implied during creation of specific instances implementing this interface
+   /** Member functions for obtaining discrete values of the underlying transform. This discretisation happens in the continuous time/frequency plane and a number of schemes can apply. Such methods must be defined or implied during creation of specific instances implementing this interface
     1) Some method for interpolation between transform values. In its simples form: Choose closest neighbour. More advanced could be using 2D splines
     2) Some scheme of normalisation. We here assume that the instantaneous level is returned (numerical value). For STFT or constant Q, this can be seen as instantaneous Power level of a given frequency component.
     3) Some method for aggregation of densely calculated transforms must exist. In its simplest form this could imply choosing level of closest neighbour. In order to avoid missing peaks, a scheme of choosing highest value in neighbourhood could be i,lied. Such schemes must be defined and documented by implementing classes
     
-    The below methods provide ways to extract values at equidistant time stamps on either linearly or arbitrarily spaced frequence intervals (see also overloaded versions from base class)
+    The below methods provide ways to extract values at equidistant time stamps on either linearly or arbitrarily spaced frequency intervals (see also overloaded versions from base class)
     
     @param timestamps is a vector of arbitrary timestamps, each of which must be in range 0..nSamples-1
     @param frequencies is a vector of arbitrary frequencies, each of which must be in range 0..0.5
     
     @param out is an array with space for nOut values
-    @param nOut must fulfill inequality nTimeSteps*nFreqSteps <= nOut
+    @param nOut must fulfil inequality nTimeSteps*nFreqSteps <= nOut
     
     @return Number of points calculated, ie nTimeSteps * nFreqSteps */
    virtual int extractFrequencySlices(const std::vector<double> & timestamps,
@@ -123,7 +123,7 @@ private:
    unsigned int nWindowLength;               ///< Length of window function used
    unsigned int nTransformLength;            ///< FFT transform length applied
    unsigned int nSamples;                    ///< Length of signal being investigated
-   vector<TF_DATA_TYPE>  vWindow;            ///< Holds coefficients of window function properly normalized
+   vector<TF_DATA_TYPE>  vWindow;            ///< Holds coefficients of window function properly normalised
    vector<TF_DATA_TYPE> vTransformBuffer;    ///< Buffer used to hold signal being investigated
    unique_ptr<TFT::FFTParam> hFFT;                ///< Pointer to FFT related structures
 };

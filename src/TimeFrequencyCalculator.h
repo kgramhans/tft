@@ -24,12 +24,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "version.h"
 
 /**
- A Time/frequency transform is in this context understood as a transform that operatates on a 1D digital signal: It calculates a representation in the time/frequency plane of the signal thus blowing it up from a 1D signal into a 2D signal (values as a function of time --> values as a function of time and frequency)
+ A Time/frequency transform is in this context understood as a transform that operates on a 1D digital signal: It calculates a representation in the time/frequency plane of the signal thus blowing it up from a 1D signal into a 2D signal (values as a function of time --> values as a function of time and frequency)
  A Time/frequency transform can be either purely digital if having orthonormal bases in the t/f plane or may result in a continuous transform with values existing for any point in the time/frequency plane. In the latter case, a transform inevitably involves a loss of information since not all values can be calculated - however a sufficiently dense representation can still be very useful
  
- The current interface does not immediately provide any quality insights related to represetation of information for an analyzed signal. Such insight is a specific property of the implementing sub classes
+ The current interface does not immediately provide any quality insights related to representation of information for an analysed signal. Such insight is a specific property of the implementing sub classes
  
- In its current version, the interface is quite rudimentary in providing support for these steps in performing time/frequency anasyis:
+ In its current version, the interface is quite rudimentary in providing support for these steps in performing time/frequency analysis:
  
  Construct --> (Transform --> Extract)*
  
@@ -37,7 +37,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
  
  Construct
  =======
- The interface provides no methods for construcing  instances: The logic is entirely left to implementing sub-classes.
+ The interface provides no methods for constructing  instances: The logic is entirely left to implementing sub-classes.
  By design, it is not expected that a constructor should require information about the period of time, that an analysis will be done
  However, one member function must be provided that gives information to the caller about the required time-support necessary for providing proper time/frequency analysis in a time interval.
  This member, prepare(), is not set to have const attribute since it must allow for setting up buffers for calculations and results. Still, the member is not mandatory to call during construction
@@ -56,7 +56,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
  
  Possible Extensions
  ===============
- It could be interesting to extend with methods for modifying values in the time/frequency plane and next transform back, Ie the sequency Construct->Transform->Extract->Modify->TransformBack
+ It could be interesting to extend with methods for modifying values in the time/frequency plane and next transform back, Ie the sequence Construct->Transform->Extract->Modify->TransformBack
  
  Known subclasses
  =============
@@ -79,8 +79,8 @@ public:
    /**
     do a time frequency transform calculating the internal representation in the time/frequency plane.
     The internal representation is valid in the time range 0..nSamples-1 and in the frequency range ranging from lowest frequency supported up to 0.5 (nominal frequency)
-    In order to provide this range, an adjoining neighbour hood of samples can be made available to the transform. In case this neighbourhood is not made avaliable or is insufficient, zeropadding of the provided samples will be in effect
-    The relevant neighbour hood can be interrogated from the time/Frequency calculater once instantiated via the return of the method prepare().
+    In order to provide this range, an adjoining neighbour hood of samples can be made available to the transform. In case this neighbourhood is not made available or is insufficient, zero-padding of the provided samples will be in effect
+    The relevant neighbour hood can be interrogated from the time/Frequency calculator once instantiated via the return of the method prepare().
     @param pSamples points to the data being investigated,
     @param nSamples is the number of samples to be investigated
     @param nValidSamplesBefore is the number of samples valid BEFORE the sample pointed to by pSamples, ie pSamples-1, pSamples-2 ... pSamples-nValidSamplesBefore also points to valid samples
@@ -125,12 +125,12 @@ public:
     */
    virtual void executeSequence(int iSequence) = 0;
    
-   /** Member functions for obtaining discrete values of the underlying transform. This discretization happens in the continuous time/frequency plane and a number of schemes can apply. Such methods must be defined or implied during creation of specific instances implementing this interface
+   /** Member functions for obtaining discrete values of the underlying transform. This discretisation happens in the continuous time/frequency plane and a number of schemes can apply. Such methods must be defined or implied during creation of specific instances implementing this interface
     1) Some method for interpolation between transform values. In its simples form: Choose closest neighbour. More advanced could be using 2D splines
     2) Some scheme of normalisation. We here assume that the instantaneous level is returned (numerical value). For STFT or constant Q, this can be seen as instantaneous RMS level of a given frequency component.
     3) Some method for aggregation of densely calculated transforms must exist. In its simplest form this could imply choosing level of closest neighbour. In order to avoid missing peaks, a scheme of choosing highest value in neighbourhood could be implied. Such schemes must be defined and documented by implementing classes
     
-    The below methods provide ways to extract values at equidistant time stamps on either linearly or arbitrarily spaced frequence intervals
+    The below methods provide ways to extract values at equidistant time stamps on either linearly or arbitrarily spaced frequency intervals
     
     @param sampleOffset is the offset from pSamples (time zero) in a previous call to doTransform() or doNextTransform(). This offset allows stitching adjoining transforms together nicely
     @param stepTime is the equidistant step between frequency slices
@@ -143,7 +143,7 @@ public:
     @param frequencies is a vector of arbitrary frequencies, each of which must be in range 0..0.5
     
     @param out is an array with space for nOut values
-    @param nOut must fulfill inequality nTimeSteps*nFreqSteps <= nOut
+    @param nOut must fulfil inequality nTimeSteps*nFreqSteps <= nOut
     The inequality    sampleOffset + stepTime*nTimeSteps < nSamples
     must always be fulfilled. Otherwise, 0 will be returned
     

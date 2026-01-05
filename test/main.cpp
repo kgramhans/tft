@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <random>
 #include <assert.h>
 #include <cstring>
+#include <numeric>
 
 #include "../src/StftCalculator.h"
 #include "../src/WaveletCalculator.h"
@@ -89,7 +90,7 @@ int main() {
    wavelet.transform();
    wavelet.dump();
    vector<double> timestamps(LEN);
-   std::iota(timestamps.begin(), timestamps.end(), 0);
+   iota(timestamps.begin(), timestamps.end(), 0);
    wavelet.executeSequence(FLEN, LEN, out, timestamps.cbegin(), timestamps.cend(), true);
    wavelet.executeSequence(FLEN, LEN, out, timestamps.cbegin(), timestamps.cend(), false);
    ConfinedGaussianWaveletVoice wavelet2(0.5, 0.45, 0.55, 8.7, 0, pFilter);

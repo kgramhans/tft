@@ -45,7 +45,7 @@ public:
          Relative bandwidth of generated wavelet is 2*dF / relF which we solve for halfLen vs Q factor
          Q^-1 = 2*dF/relF = 1/2/pi/dT/relF  = 1 / (2 * pi * (2 * halfLen ) * sigma * relF)
     
-          2 * halflen  = 1 / (2 * pi * sigma * relF * Q^-1)
+          2 * halfLen  = 1 / (2 * pi * sigma * relF * Q^-1)
             halfLen = (1 / (2 * pi * sigma * relF * Q^-1) ) / 2
     
          Example

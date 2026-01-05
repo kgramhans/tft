@@ -49,7 +49,7 @@
 namespace TFT {
 
 /*
-*  Initialize the Sine table and Twiddle pointers (bit-reversed pointers)
+*  Initialise the Sine table and Twiddle pointers (bit-reversed pointers)
 *  for the FFT routine.
 */
 unique_ptr<FFTParam> InitializeFFT(size_t fftlen)
@@ -204,7 +204,7 @@ void RealFFTf(fft_type *buffer, const FFTParam *h)
 *        get legible output, (i.e. wave[2*i]   = buffer[ BitReversed[i] ]
 *                                  wave[2*i+1] = buffer[ BitReversed[i]+1 ] )
 *        Input is in normal order, interleaved (real,imaginary) complex data
-*        You must call GetFFT(fftlen) first to initialize some buffers!
+*        You must call GetFFT(fftlen) first to initialise some buffers!
 *
 * Input buffer[0] is the DC bin, and input buffer[1] is the Fs/2 bin
 * - this can be done because both values will always be real only
