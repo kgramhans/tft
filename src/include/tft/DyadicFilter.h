@@ -30,8 +30,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <vector>
 
-using namespace std;
-
+namespace TFT {
 class DyadicFilter
 {
 public:
@@ -48,12 +47,12 @@ public:
    /**
     @param nSamples will be filled with number of samples in range from last "insertSamples" operation for the requested octave
     */
-   const pair<TF_DATA_TYPE *, unsigned int> getSamples(const unsigned int octave, const int fromSample) const;
+   const std::pair<TF_DATA_TYPE *, unsigned int> getSamples(const unsigned int octave, const int fromSample) const;
    void doAllocation(unsigned int nSamples, unsigned int nSamplesBefore, unsigned int nSamplesAfter);
 private:
-   vector<TF_DATA_TYPE *> vBufferBegin;      // Point to start of allocated buffer
-   vector<TF_DATA_TYPE *> vBufferTimeZero;   // Point to location of time zero in allocated buffer
-   vector<unsigned int> vBufferLengths;            // Point to total length of allocated buffer (starting from BufferBegin)
+   std::vector<TF_DATA_TYPE *> vBufferBegin;      // Point to start of allocated buffer
+   std::vector<TF_DATA_TYPE *> vBufferTimeZero;   // Point to location of time zero in allocated buffer
+   std::vector<unsigned int> vBufferLengths;            // Point to total length of allocated buffer (starting from BufferBegin)
    void verify();
    bool isNaN(TF_DATA_TYPE val) {
       return val != val;
@@ -83,4 +82,5 @@ private:
    static constexpr TF_DATA_TYPE cstMagic = std::numeric_limits<TF_DATA_TYPE>::signaling_NaN();
    static const TF_DATA_TYPE filter_taps[cstFilterTaps];
 };
+}
 #endif /* DyadicFilter_h */

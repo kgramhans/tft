@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "DyadicFilter.h"
 #include "ConfinedGaussianWaveletVoice.h"
 
+namespace TFT {
 class WaveletCalculator : public ITimeFrequencyCalculator
 {
 public:
@@ -158,7 +159,7 @@ private:
       bool transpose;
    } sequenceParameters;
    DyadicFilter dyadicFilter;
-   vector<WaveletBaseClass *> waveletVoices;
+   std::vector<WaveletBaseClass *> waveletVoices;
    unsigned int nSamples;
    
    /**
@@ -168,5 +169,4 @@ private:
     */
    virtual void getRequiredPaddingSamples(unsigned int &nPre, unsigned int & nPost) const;
 };
-
-
+}

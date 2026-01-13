@@ -25,6 +25,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using namespace std;
 
+namespace TFT {
 StftCalculator::StftCalculator(unsigned int windowLength,
                   unsigned int transformLength,
                   const TF_DATA_TYPE * pWindow) : nWindowLength(windowLength), nTransformLength(transformLength), nSamples(0), vWindow(pWindow, pWindow + windowLength)
@@ -153,8 +154,4 @@ int StftCalculator::extractFrequencySlices(const std::vector<double> & timestamp
    }
    return (int)(delta - dout + 1);
 }
-   
-   
-
-
-
+}

@@ -28,6 +28,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "WaveletVoice.h"
 
+namespace TFT {
 using WaveletBaseClass = WaveletVoiceUnbuffered; // Two possibilities here: WaveletVoice is faster, WaveletVoiceUnbuffered uses less memory. Optimal choice depends on usage scenario
 class ConfinedGaussianWaveletVoice : public WaveletBaseClass
 {
@@ -80,5 +81,6 @@ protected:
    float gaussian(float x);
    float approximateConfinedGaussian(float x);
 };
+}
 
 #endif // !CGWaveletVoice_h

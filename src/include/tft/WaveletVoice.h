@@ -29,6 +29,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "DyadicFilter.h"
 #include "WaveletVoiceUnbuffered.h"
 
+namespace TFT {
 class WaveletVoice : public WaveletVoiceUnbuffered
 {
 public:
@@ -46,5 +47,6 @@ protected:
                 double fhigh);
    TF_DATA_TYPE * resultSqr;
 };
+}
 
 #endif /* WaveletVoice_h */

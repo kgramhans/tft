@@ -27,8 +27,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <cmath>
 #include <iostream>
 #include "ConfinedGaussianWaveletVoice.h"
+
 using namespace std;
 
+namespace TFT {
 ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
                  double flow,
                  double fhigh,
@@ -113,4 +115,5 @@ void ConfinedGaussianWaveletVoice::getFrequency(double & freq, double & bw) cons
 {
    freq = frequency;
    bw = frequency / q;
+}
 }

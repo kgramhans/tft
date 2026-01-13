@@ -24,6 +24,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <stddef.h>
 #include <vector>
 
+namespace TFT {
 /**
  A Time/frequency transform is in this context understood as a transform that operates on a 1D digital signal: It calculates a representation in the time/frequency plane of the signal thus blowing it up from a 1D signal into a 2D signal (values as a function of time --> values as a function of time and frequency)
  A Time/frequency transform can be either purely digital if having orthonormal bases in the t/f plane or may result in a continuous transform with values existing for any point in the time/frequency plane. In the latter case, a transform inevitably involves a loss of information since not all values can be calculated - however a sufficiently dense representation can still be very useful
@@ -214,4 +215,5 @@ public:
     */
    virtual     ~ITimeFrequencyCalculator() {}
 };
+}
 #endif

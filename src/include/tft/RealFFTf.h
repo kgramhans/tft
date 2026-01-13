@@ -6,17 +6,15 @@
 #include <stddef.h>
 #include <memory>
 
-using namespace std;
-
 namespace TFT {
 using fft_type = TF_DATA_TYPE;
 struct FFTParam {
-   unique_ptr<int[]> BitReversed;
-   unique_ptr<fft_type[]> SinTable;
+   std::unique_ptr<int[]> BitReversed;
+   std::unique_ptr<fft_type[]> SinTable;
    size_t Points;
 };
 
-unique_ptr<FFTParam> GetFFT(size_t);
+std::unique_ptr<FFTParam> GetFFT(size_t);
 void RealFFTf(fft_type *, const FFTParam *);
 void InverseRealFFTf(fft_type *, const FFTParam *);
 void ReorderToTime(const FFTParam *hFFT, const fft_type *buffer, fft_type *TimeOut);

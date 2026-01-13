@@ -19,8 +19,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "TimeFrequencyCalculator.h"
 #include "RealFFTf.h"
 #include <vector>
-using namespace std;
 
+namespace TFT {
 class StftCalculator : public ITimeFrequencyCalculator
 {
 public:
@@ -123,9 +123,10 @@ private:
    unsigned int nWindowLength;               ///< Length of window function used
    unsigned int nTransformLength;            ///< FFT transform length applied
    unsigned int nSamples;                    ///< Length of signal being investigated
-   vector<TF_DATA_TYPE>  vWindow;            ///< Holds coefficients of window function properly normalised
-   vector<TF_DATA_TYPE> vTransformBuffer;    ///< Buffer used to hold signal being investigated
-   unique_ptr<TFT::FFTParam> hFFT;                ///< Pointer to FFT related structures
+   std::vector<TF_DATA_TYPE>  vWindow;            ///< Holds coefficients of window function properly normalised
+   std::vector<TF_DATA_TYPE> vTransformBuffer;    ///< Buffer used to hold signal being investigated
+   std::unique_ptr<FFTParam> hFFT;                ///< Pointer to FFT related structures
 };
+}
 
 

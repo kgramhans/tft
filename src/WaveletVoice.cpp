@@ -24,10 +24,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
 #include "WaveletVoice.h"
-#include <iostream>
 #include <assert.h>
-#include <tuple>
 
+using namespace std;
+
+namespace TFT {
 WaveletVoice::WaveletVoice(const float overlapPercentage,
                            const DyadicFilter * dFilter,
                            const double fCenter,
@@ -132,4 +133,4 @@ TF_DATA_TYPE WaveletVoice::get(double timestamp) const
    // No interpolation, no rounding - just plain get it as easy as possible
    return resultSqr[inx];
 }
-   
+}

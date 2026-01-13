@@ -31,6 +31,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "DyadicFilter.h"
 
+namespace TFT {
 class WaveletVoiceUnbuffered
 {
 public:
@@ -50,7 +51,7 @@ protected:
                 double fCenter,
                 double flow,
                 double fhigh);
-   virtual pair<unsigned int, unsigned int>  calculateResultLenAndStep(unsigned int _resolution) const;
+   virtual std::pair<unsigned int, unsigned int>  calculateResultLenAndStep(unsigned int _resolution) const;
 
    
    const DyadicFilter * dyadicFilter;
@@ -88,5 +89,6 @@ protected:
       }
    } valueCache;
 };
+}
 
 #endif // !WaveletVoiceUnbuffered_h

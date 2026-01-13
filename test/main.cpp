@@ -62,12 +62,12 @@ int main() {
    spike[LEN/2] = 10.0;
 
    /**==================**/
-   DyadicFilter * pFilter;
+   TFT::DyadicFilter * pFilter;
 #define OCTAVES 4
-   unsigned int padding = DyadicFilter::getExtraSamples(OCTAVES - 1);
+   unsigned int padding = TFT::DyadicFilter::getExtraSamples(OCTAVES - 1);
    cout << "Extra samples for filter with ##OCTAVES octaves : " << padding << endl;
    pair<TF_DATA_TYPE *, unsigned int> rval;
-   pFilter = new DyadicFilter(OCTAVES);
+   pFilter = new TFT::DyadicFilter(OCTAVES);
    pFilter->doAllocation(LEN, padding + 33, padding);
    pFilter->filterSamples(spike, LEN, 0, 0);
    for (int octave = 0; octave < OCTAVES; octave ++)
@@ -82,10 +82,10 @@ int main() {
    }
    
    delete pFilter;
-   pFilter = new DyadicFilter(10);
+   pFilter = new TFT::DyadicFilter(10);
    pFilter->doAllocation(LEN, 20000, 21000);
    pFilter->filterSamples(spike, LEN, 0, 0);
-   ConfinedGaussianWaveletVoice wavelet(0.001, 0.0005, 0.002, 8.7, 0, pFilter);
+   TFT::ConfinedGaussianWaveletVoice wavelet(0.001, 0.0005, 0.002, 8.7, 0, pFilter);
    wavelet.allocateResult(LEN,0);
    wavelet.transform();
    wavelet.dump();
@@ -93,7 +93,7 @@ int main() {
    iota(timestamps.begin(), timestamps.end(), 0);
    wavelet.executeSequence(FLEN, LEN, out, timestamps.cbegin(), timestamps.cend(), true);
    wavelet.executeSequence(FLEN, LEN, out, timestamps.cbegin(), timestamps.cend(), false);
-   ConfinedGaussianWaveletVoice wavelet2(0.5, 0.45, 0.55, 8.7, 0, pFilter);
+   TFT::ConfinedGaussianWaveletVoice wavelet2(0.5, 0.45, 0.55, 8.7, 0, pFilter);
    wavelet2.allocateResult(LEN,0);
    wavelet2.transform();
    wavelet2.dump();
@@ -110,7 +110,7 @@ int main() {
    {
       window[i] = 1;
    }
-   ITimeFrequencyCalculator * stft = new StftCalculator(4, 2 * FLEN, window);
+   TFT::ITimeFrequencyCalculator * stft = new TFT::StftCalculator(4, 2 * FLEN, window);
    stft->doTransform(spike, LEN, 0, 0);
    stft->extractFrequencySlices(0, 1.0, LEN, 0.1, 0.3/FLEN, FLEN, out, OUT_LEN, false);
    delete stft;
@@ -135,7 +135,7 @@ int main() {
 #define TIMING(x) high_resolution_clock::time_point x = high_resolution_clock::now()
    
    TIMING(t1);
-   ITimeFrequencyCalculator * wc = new WaveletCalculator(octaves, 0.4, Q, overlap);
+   TFT::ITimeFrequencyCalculator * wc = new TFT::WaveletCalculator(octaves, 0.4, Q, overlap);
 
    TIMING(t2);
    unsigned int nb = wc->doTransform(spike, LEN, 0, 0);

@@ -15,13 +15,15 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include <iostream>
 #include <assert.h>
 #include <cmath>
 #include <cstring>
 #include "WaveletCalculator.h"
 #include "ConfinedGaussianWaveletVoice.h"
 
+using namespace std;
+
+namespace TFT {
 WaveletCalculator::WaveletCalculator(unsigned int nOctaves,
                                      double fmax,
                                      float Q,
@@ -287,3 +289,4 @@ void WaveletCalculator::executeSequence(int iSequence)
  
  *
  */
+}

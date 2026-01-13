@@ -29,6 +29,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <tuple>
 #include <cmath>
 
+using namespace std;
+
+namespace TFT {
 WaveletVoiceUnbuffered::WaveletVoiceUnbuffered(const float overlapPercentage,
                            const DyadicFilter * dFilter,
                            double fCenter,
@@ -184,5 +187,4 @@ void WaveletVoiceUnbuffered::executeSequence(int freqStride, int timeStride, TF_
       }
    }
 }
-
-   
+}
