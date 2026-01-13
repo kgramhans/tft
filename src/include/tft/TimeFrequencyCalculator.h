@@ -18,10 +18,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #ifndef _TIME_FREQ_CALC_H
 #define _TIME_FREQ_CALC_H
+
+#include "TftDefines.h"
+
 #include <stddef.h>
 #include <vector>
-#include <utility>
-#include "version.h"
 
 /**
  A Time/frequency transform is in this context understood as a transform that operates on a 1D digital signal: It calculates a representation in the time/frequency plane of the signal thus blowing it up from a 1D signal into a 2D signal (values as a function of time --> values as a function of time and frequency)

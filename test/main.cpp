@@ -23,10 +23,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <cstring>
 #include <numeric>
 
-#include "../src/StftCalculator.h"
-#include "../src/WaveletCalculator.h"
-#include "../src/DyadicFilter.h"
-#include "../src/ConfinedGaussianWaveletVoice.h"
+#include "tft/StftCalculator.h"
+#include "tft/WaveletCalculator.h"
+#include "tft/DyadicFilter.h"
+#include "tft/ConfinedGaussianWaveletVoice.h"
 using namespace std;
 using namespace chrono;
 int main() {

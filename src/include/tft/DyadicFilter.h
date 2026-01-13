@@ -26,10 +26,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #ifndef DyadicFilter_h
 #define DyadicFilter_h
 
-#include <utility>
+#include "TftDefines.h"
+
 #include <vector>
-#include <limits>
-#include "version.h"
 
 using namespace std;
 

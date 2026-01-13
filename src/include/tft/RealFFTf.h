@@ -1,8 +1,9 @@
 #ifndef __realfftf_h
 #define __realfftf_h
 
-#include "stddef.h"
-#include "version.h"
+#include "TftDefines.h"
+
+#include <stddef.h>
 #include <memory>
 
 using namespace std;
