@@ -15,5 +15,5 @@ ConfinedGaussianWaveletVoice.cpp
 RealFFTf.cpp
 )
 add_library(tft ${SOURCE_FILES})
-target_include_directories(tft PUBLIC "../include/tft")
+target_include_directories(tft PUBLIC "../include")
 

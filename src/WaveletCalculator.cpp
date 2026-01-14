@@ -18,8 +18,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <assert.h>
 #include <cmath>
 #include <cstring>
-#include "WaveletCalculator.h"
-#include "ConfinedGaussianWaveletVoice.h"
+#include "tft/WaveletCalculator.h"
+#include "tft/ConfinedGaussianWaveletVoice.h"
 
 TFT::WaveletCalculator::WaveletCalculator(unsigned int nOctaves,
                                      double fmax,
@@ -221,7 +221,7 @@ void TFT::WaveletCalculator::executeSequence(int iSequence)
        assert(*iterFreq <= 0.5);
 
        // Locate the voice closest to the asked-for frequency
-       const WaveletBaseClass * pVoice = NULL;
+       const WaveletVoiceUnbuffered * pVoice = NULL;
        
        for (auto iter = waveletVoices.cbegin(); iter != waveletVoices.cend(); iter++)
        {

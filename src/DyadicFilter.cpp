@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //  Created by Klaus Gram-Hansen on 12/11/2025.
 //
 
-#include "DyadicFilter.h"
+#include "tft/DyadicFilter.h"
 #include <assert.h>
 #include <cstring>
 

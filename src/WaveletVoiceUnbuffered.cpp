@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //  Created by Klaus Gram-Hansen on 17/11/2025.
 //
 
-#include "WaveletVoiceUnbuffered.h"
+#include "tft/WaveletVoiceUnbuffered.h"
 #include <iostream>
 #include <assert.h>
 #include <tuple>
