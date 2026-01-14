@@ -29,16 +29,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "ConfinedGaussianWaveletVoice.h"
 using namespace std;
 
-ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
+TFT::ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
                  double flow,
                  double fhigh,
                 double Q,
                 const float overlapPercentage,
-                const DyadicFilter * dFilter) : WaveletBaseClass(overlapPercentage, dFilter, fCenter, flow, fhigh), q(Q)
+                const DyadicFilter * dFilter) : WaveletBaseClass(dFilter, fCenter, flow, fhigh), q(Q)
 {
    // When constructing, firstly let us know about the upper frequency limit by the wavelet to be defined
    assert(fCenter > 0 && fCenter <= 0.5);
    assert(dFilter);
+   assert(overlapPercentage < 100.0);
+   assert(Q > 0);
    float deltaF = fCenter / Q / 2.0;
    float fmax = bw70Ratio * deltaF + fCenter;
    
@@ -87,30 +89,25 @@ ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
 }
 
 
-void ConfinedGaussianWaveletVoice::dump() const
+void TFT::ConfinedGaussianWaveletVoice::dump() const
 {
    cout << "Approximate Confined Gaussian Wavelet in octave " << octave << ", windowL " << waveletLength <<", duration " << duration << ", step " << transformStep << "[ " << fLow << "; " << frequency << "; " << fHigh << " ]" << endl;
    WaveletVoiceUnbuffered::dump();
 }
 
-ConfinedGaussianWaveletVoice::~ConfinedGaussianWaveletVoice()
+TFT::ConfinedGaussianWaveletVoice::~ConfinedGaussianWaveletVoice()
 {
    
 }
 
-float ConfinedGaussianWaveletVoice::gaussian(float x)
+float TFT::ConfinedGaussianWaveletVoice::gaussian(float x)
 {
    float argument = (x - waveletHalfLength) / 2 / waveletLength / sigma;
    return exp(- argument * argument);
 }
 
-float ConfinedGaussianWaveletVoice::approximateConfinedGaussian(float x)
+float TFT::ConfinedGaussianWaveletVoice::approximateConfinedGaussian(float x)
 {
    return gaussian(x) - gaussian(-0.5) * (gaussian(x + waveletLength) + gaussian(x - waveletLength)) / (gaussian(-0.5 + waveletLength) + gaussian(-0.5 - waveletLength));
 }
 
-void ConfinedGaussianWaveletVoice::getFrequency(double & freq, double & bw) const
-{
-   freq = frequency;
-   bw = frequency / q;
-}

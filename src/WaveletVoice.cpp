@@ -24,23 +24,20 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
 
 #include "WaveletVoice.h"
-#include <iostream>
 #include <assert.h>
-#include <tuple>
 
-WaveletVoice::WaveletVoice(const float overlapPercentage,
-                           const DyadicFilter * dFilter,
+TFT::WaveletVoice::WaveletVoice(const DyadicFilter * dFilter,
                            const double fCenter,
                            double flow,
                            double fhigh) :
-   WaveletVoiceUnbuffered(overlapPercentage, dFilter, fCenter, flow, fhigh)
+   WaveletVoiceUnbuffered(dFilter, fCenter, flow, fhigh)
 {}
 
-void WaveletVoice::dump() const
+void TFT::WaveletVoice::dump() const
 {
 }
 
-WaveletVoice::~WaveletVoice()
+TFT::WaveletVoice::~WaveletVoice()
 {
    if(resultLen)
    {
@@ -49,7 +46,7 @@ WaveletVoice::~WaveletVoice()
    }
 }
    
-void WaveletVoice::allocateResult(unsigned int nSamples, unsigned int _resolution)
+void TFT::WaveletVoice::allocateResult(unsigned int nSamples, unsigned int _resolution)
 {
    if (resultLen)
    {
@@ -57,7 +54,7 @@ void WaveletVoice::allocateResult(unsigned int nSamples, unsigned int _resolutio
       if (nSamples == transformLength)
       {
          // Check if allocation will result in same step
-         if (make_pair(resultLen, resultStep) == calculateResultLenAndStep(_resolution))
+         if (std::make_pair(resultLen, resultStep) == calculateResultLenAndStep(_resolution))
          {
             return; // We are good
          }
@@ -70,17 +67,17 @@ void WaveletVoice::allocateResult(unsigned int nSamples, unsigned int _resolutio
 
    assert(resultLen == 0);
    transformLength = nSamples;
-   tie(resultLen, resultStep) = calculateResultLenAndStep(_resolution);
+   std::tie(resultLen, resultStep) = calculateResultLenAndStep(_resolution);
    resultSqr = new TF_DATA_TYPE[resultLen];
 }
    
-int WaveletVoice::transform()
+int TFT::WaveletVoice::transform()
 {
    assert(resultLen);
    assert(resultStep);
    
    // Simply step through data until result is full!
-   pair<TF_DATA_TYPE *, unsigned int> rval = dyadicFilter->getSamples(octave, -(waveletHalfLength << octave));
+   std::pair<TF_DATA_TYPE *, unsigned int> rval = dyadicFilter->getSamples(octave, -(waveletHalfLength << octave));
    if (rval.second == 0)
    {
       for (int i = resultLen; i--;)
@@ -122,7 +119,7 @@ int WaveletVoice::transform()
    return resultLen;
 }
    
-TF_DATA_TYPE WaveletVoice::get(double timestamp) const
+TF_DATA_TYPE TFT::WaveletVoice::get(double timestamp) const
 {
    assert(timestamp >= 0 && timestamp < transformLength);
    assert(resultLen);

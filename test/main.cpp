@@ -23,12 +23,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <cstring>
 #include <numeric>
 
-#include "../src/StftCalculator.h"
-#include "../src/WaveletCalculator.h"
-#include "../src/DyadicFilter.h"
-#include "../src/ConfinedGaussianWaveletVoice.h"
+#include <tft.h>
 using namespace std;
 using namespace chrono;
+using namespace TFT;
 int main() {
     std::cout << "Hello World!" << std::endl;
 
@@ -36,11 +34,11 @@ int main() {
 #define FLEN 256
 #define DELTA 12
 #define OUT_LEN (LEN*FLEN)
-   float spike[LEN];
-   float out[OUT_LEN];
-   float out2[OUT_LEN];
-   memset(spike, 0, sizeof(float) * (LEN));
-   memset(out, 0, sizeof(float) * (OUT_LEN));
+   TF_DATA_TYPE spike[LEN];
+   TF_DATA_TYPE out[OUT_LEN];
+   TF_DATA_TYPE out2[OUT_LEN];
+   memset(spike, 0, sizeof(TF_DATA_TYPE) * (LEN));
+   memset(out, 0, sizeof(TF_DATA_TYPE) * (OUT_LEN));
    for (int i = 0; i < 0*LEN; i++)
    {
       switch (i % 4)
@@ -105,7 +103,7 @@ int main() {
    std::uniform_int_distribution<std::mt19937::result_type> dist99(1,99); // distribution in range [1, 6]
    std::uniform_int_distribution<std::mt19937::result_type> dist999(1,999); // distribution in range [1, 6]
 
-   float window[64];
+   TF_DATA_TYPE window[64];
    for (int i = 0; i < 64;i++)
    {
       window[i] = 1;

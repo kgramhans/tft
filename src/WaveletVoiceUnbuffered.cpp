@@ -29,8 +29,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <tuple>
 #include <cmath>
 
-WaveletVoiceUnbuffered::WaveletVoiceUnbuffered(const float overlapPercentage,
-                           const DyadicFilter * dFilter,
+TFT::WaveletVoiceUnbuffered::WaveletVoiceUnbuffered(const DyadicFilter * dFilter,
                            double fCenter,
                            double flow,
                            double fhigh) :
@@ -38,7 +37,6 @@ WaveletVoiceUnbuffered::WaveletVoiceUnbuffered(const float overlapPercentage,
    octave(0),
    waveletHalfLength(0),
    resultLen(0),
-   overlap(overlapPercentage),
    duration(0),
    resultStep(0),
    transformLength(0),
@@ -48,11 +46,11 @@ WaveletVoiceUnbuffered::WaveletVoiceUnbuffered(const float overlapPercentage,
 {
 }
 
-void WaveletVoiceUnbuffered::dump() const
+void TFT::WaveletVoiceUnbuffered::dump() const
 {
 }
 
-WaveletVoiceUnbuffered::~WaveletVoiceUnbuffered()
+TFT::WaveletVoiceUnbuffered::~WaveletVoiceUnbuffered()
 {
    if(waveletHalfLength)
    {
@@ -62,7 +60,7 @@ WaveletVoiceUnbuffered::~WaveletVoiceUnbuffered()
    }
 }
    
-void WaveletVoiceUnbuffered::getRequiredPaddingSamples(unsigned int & pre, unsigned int & post) const
+void TFT::WaveletVoiceUnbuffered::getRequiredPaddingSamples(unsigned int & pre, unsigned int & post) const
 {
    // We need WaveletHalfLen samples from the LP filter before and WaveletHalfLen+1 after
    // These numbers must be multiplied by 1<<octave. Additionally, we must add requirement from LP filter
@@ -74,7 +72,7 @@ void WaveletVoiceUnbuffered::getRequiredPaddingSamples(unsigned int & pre, unsig
    post = pre + resultLen * resultStep - transformLength;
 }
 
-pair<unsigned int, unsigned int> WaveletVoiceUnbuffered::calculateResultLenAndStep(unsigned int _resolution) const
+std::pair<unsigned int, unsigned int> TFT::WaveletVoiceUnbuffered::calculateResultLenAndStep(unsigned int _resolution) const
 {
    assert(transformLength);
    unsigned int resultStep = std::max(transformStep, (_resolution / 2) >> octave ) << octave; // Be more conservative internally with resolution
@@ -86,22 +84,22 @@ pair<unsigned int, unsigned int> WaveletVoiceUnbuffered::calculateResultLenAndSt
       assert(2 * remaining < (long) resultStep);
       rval++;
    }
-   return pair<unsigned int, unsigned int>(rval, resultStep);
+   return std::pair<unsigned int, unsigned int>(rval, resultStep);
 }
 
-void WaveletVoiceUnbuffered::allocateResult(unsigned int nSamples, unsigned int _resolution)
+void TFT::WaveletVoiceUnbuffered::allocateResult(unsigned int nSamples, unsigned int _resolution)
 {
    transformLength = nSamples;
-   tie(resultLen, resultStep) = calculateResultLenAndStep(_resolution);
+   std::tie(resultLen, resultStep) = calculateResultLenAndStep(_resolution);
    valueCache.invalidate();
 }
    
-int WaveletVoiceUnbuffered::transform()
+int TFT::WaveletVoiceUnbuffered::transform()
 {
    return 0; // We do not do anything when unbuffered
 }
    
-TF_DATA_TYPE WaveletVoiceUnbuffered::get(double timestamp) const
+TF_DATA_TYPE TFT::WaveletVoiceUnbuffered::get(double timestamp) const
 {
    // During getting, we do the calculations
    assert(timestamp >= 0 && timestamp < transformLength);
@@ -109,7 +107,7 @@ TF_DATA_TYPE WaveletVoiceUnbuffered::get(double timestamp) const
    assert(resultStep);
    
    // Simply step through data until result is full!
-   pair<TF_DATA_TYPE *, unsigned int> rval = dyadicFilter->getSamples(octave, (unsigned int)(timestamp + 0.5) -(waveletHalfLength << octave));
+   std::pair<TF_DATA_TYPE *, unsigned int> rval = dyadicFilter->getSamples(octave, (unsigned int)(timestamp + 0.5) -(waveletHalfLength << octave));
    if (rval.second == 0)
    {
       return 0;
@@ -141,7 +139,7 @@ TF_DATA_TYPE WaveletVoiceUnbuffered::get(double timestamp) const
 }
 
 
-void WaveletVoiceUnbuffered::executeSequence(int freqStride, int timeStride, TF_DATA_TYPE * out, std::vector<double>::const_iterator timeIterBegin, std::vector<double>::const_iterator timeIterEnd, bool transpose)
+void TFT::WaveletVoiceUnbuffered::executeSequence(int freqStride, int timeStride, TF_DATA_TYPE * out, std::vector<double>::const_iterator timeIterBegin, std::vector<double>::const_iterator timeIterEnd, bool transpose)
 {
    transform();
    valueCache.invalidate();
