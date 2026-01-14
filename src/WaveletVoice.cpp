@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //  Created by Klaus Gram-Hansen on 17/11/2025.
 //
 
-#include "WaveletVoice.h"
+#include "tft/WaveletVoice.h"
 #include <assert.h>
 
 TFT::WaveletVoice::WaveletVoice(const DyadicFilter * dFilter,

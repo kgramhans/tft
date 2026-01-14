@@ -26,7 +26,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <assert.h>
 #include <cmath>
 #include <iostream>
-#include "ConfinedGaussianWaveletVoice.h"
+#include "tft/ConfinedGaussianWaveletVoice.h"
 using namespace std;
 
 TFT::ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
@@ -34,7 +34,7 @@ TFT::ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
                  double fhigh,
                 double Q,
                 const float overlapPercentage,
-                const DyadicFilter * dFilter) : WaveletBaseClass(dFilter, fCenter, flow, fhigh), q(Q)
+                const DyadicFilter * dFilter) : WaveletVoiceUnbuffered(dFilter, fCenter, flow, fhigh), q(Q)
 {
    // When constructing, firstly let us know about the upper frequency limit by the wavelet to be defined
    assert(fCenter > 0 && fCenter <= 0.5);

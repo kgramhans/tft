@@ -159,7 +159,7 @@ namespace TFT {
           bool transpose;
        } sequenceParameters;
        DyadicFilter dyadicFilter;
-       std::vector<WaveletBaseClass *> waveletVoices;
+       std::vector<WaveletVoiceUnbuffered *> waveletVoices;
        unsigned int nSamples;
 
        /**
