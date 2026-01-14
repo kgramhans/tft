@@ -29,22 +29,22 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "DyadicFilter.h"
 #include "WaveletVoiceUnbuffered.h"
 
-class WaveletVoice : public WaveletVoiceUnbuffered
-{
-public:
-   virtual void dump() const override;
-   virtual ~WaveletVoice();
-   virtual void allocateResult(unsigned int nSamples, unsigned int resolution) override;
-   int transform() override;
-   TF_DATA_TYPE get(double timestamp) const override;
+namespace TFT {
+    class WaveletVoice : public WaveletVoiceUnbuffered
+    {
+    public:
+       virtual void dump() const override;
+       virtual ~WaveletVoice();
+       virtual void allocateResult(unsigned int nSamples, unsigned int resolution) override;
+       int transform() override;
+       TF_DATA_TYPE get(double timestamp) const override;
 
-protected:
-   WaveletVoice(const float overlapPercentage,
-                const DyadicFilter * dFilter,
-                const double fCenter,
-                double flow,
-                double fhigh);
-   TF_DATA_TYPE * resultSqr;
-};
-
+    protected:
+       WaveletVoice(const DyadicFilter * dFilter,
+                    const double fCenter,
+                    double flow,
+                    double fhigh);
+       TF_DATA_TYPE * resultSqr;
+    };
+}
 #endif /* WaveletVoice_h */

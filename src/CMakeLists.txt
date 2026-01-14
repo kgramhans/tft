@@ -7,17 +7,16 @@ project(tft VERSION 0.4)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-configure_file(version.h.in version.h)
-set(SOURCE_FILES
-WaveletCalculator.cpp WaveletCalculator.h
-StftCalculator.cpp StftCalculator.h
-TimeFrequencyCalculator.h
-DyadicFilter.cpp DyadicFilter.h
-WaveletVoice.h WaveletVoice.cpp
-WaveletVoiceUnbuffered.h WaveletVoiceUnbuffered.cpp
-ConfinedGaussianWaveletVoice.h ConfinedGaussianWaveletVoice.cpp
-RealFFTf.h RealFFTf.cpp
 
+set(SOURCE_FILES
+WaveletCalculator.cpp
+StftCalculator.cpp
+DyadicFilter.cpp
+WaveletVoice.cpp
+WaveletVoiceUnbuffered.cpp
+ConfinedGaussianWaveletVoice.cpp
+RealFFTf.cpp
 )
 add_library(tft ${SOURCE_FILES})
-target_include_directories(tft PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(tft PUBLIC "../include/tft")
+

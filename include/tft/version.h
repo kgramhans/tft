@@ -1,6 +1,6 @@
 // the configured options and settings for tf_constantq
-#define tft_VERSION_MAJOR @tft_VERSION_MAJOR@
-#define tft_VERSION_MINOR @tft_VERSION_MINOR@
+#define tft_VERSION_MAJOR 0
+#define tft_VERSION_MINOR 5
 #ifndef TF_DATA_TYPE
     #define TF_DATA_TYPE float
 #endif

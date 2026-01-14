@@ -15,21 +15,20 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include <iostream>
 #include <assert.h>
 #include <cmath>
 #include <cstring>
 #include "WaveletCalculator.h"
 #include "ConfinedGaussianWaveletVoice.h"
 
-WaveletCalculator::WaveletCalculator(unsigned int nOctaves,
+TFT::WaveletCalculator::WaveletCalculator(unsigned int nOctaves,
                                      double fmax,
                                      float Q,
                                      float overlapPercentage) : dyadicFilter(nOctaves), nSamples(0)
 {
    assert(nOctaves > 0);
    assert(fmax > 0 && fmax <= 0.5);
-   assert(Q > 0);
+   assert(Q > 0.5);
    assert(overlapPercentage < 100); // negative is ok, though unusual
    
    // Calculate increment
@@ -49,7 +48,7 @@ WaveletCalculator::WaveletCalculator(unsigned int nOctaves,
    }
 }
 
-WaveletCalculator::~WaveletCalculator()
+TFT::WaveletCalculator::~WaveletCalculator()
 {
    while (!waveletVoices.empty())
    {
@@ -63,7 +62,7 @@ WaveletCalculator::~WaveletCalculator()
  This is essential information to the caller when seeking to avoid artificial transients at the edges of signal
  being investigated
  */
- void WaveletCalculator::getRequiredPaddingSamples(unsigned int &nPre, unsigned int & nPost) const
+ void TFT::WaveletCalculator::getRequiredPaddingSamples(unsigned int &nPre, unsigned int & nPost) const
  {
     unsigned int pre(0);
     unsigned int post(0);
@@ -72,8 +71,8 @@ WaveletCalculator::~WaveletCalculator()
     for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
     {
        (*iter)->getRequiredPaddingSamples(pre, post);
-       nPre = max(pre, nPre);
-       nPost = max(post, nPost);
+       nPre = std::max(pre, nPre);
+       nPost = std::max(post, nPost);
     }
  }
     
@@ -94,7 +93,7 @@ WaveletCalculator::~WaveletCalculator()
  The continuous time/frequency transform must be calculated until just before the point in time corresponding to pSamples + nSamples
  In case nValidSamplesBefore is lower than first of getRequiredPaddingSamples() or nValidSamplesAfter is lower than second of getRequiredPaddingSamples(), then zero padding will be applied
  */
- unsigned int  WaveletCalculator::doTransform(const TF_DATA_TYPE* pSamples, const unsigned int nSamples, const unsigned int nValidSamplesBefore, const unsigned int nValidSamplesAfter)
+ unsigned int  TFT::WaveletCalculator::doTransform(const TF_DATA_TYPE* pSamples, const unsigned int nSamples, const unsigned int nValidSamplesBefore, const unsigned int nValidSamplesAfter)
  {
     unsigned int pre, post;
     prepare(nSamples, 0, pre, post); // Here we prepare without limiting resolution. If prepare was already called with limiting resolution, such resolution will be preserved
@@ -113,7 +112,7 @@ WaveletCalculator::~WaveletCalculator()
  /**
   Reset any internal state to that of a newly created object. This may be a time-saver as opposed to free/allocate af new object
  */
-void  WaveletCalculator::prepare(unsigned int n_samples, unsigned int resolution, unsigned int & nPre, unsigned int & nPost)
+void  TFT::WaveletCalculator::prepare(unsigned int n_samples, unsigned int resolution, unsigned int & nPre, unsigned int & nPost)
  {
     nSamples = n_samples;
     for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
@@ -126,7 +125,7 @@ void  WaveletCalculator::prepare(unsigned int n_samples, unsigned int resolution
     dyadicFilter.doAllocation(nSamples, nPre, nPost);
  }
 
-int WaveletCalculator::prepareSequences(const TF_DATA_TYPE* pSamples,
+int TFT::WaveletCalculator::prepareSequences(const TF_DATA_TYPE* pSamples,
                              unsigned int nSamples,
                              unsigned int nValidSamplesBefore,
                              unsigned int nValidSamplesAfter,
@@ -160,7 +159,7 @@ int WaveletCalculator::prepareSequences(const TF_DATA_TYPE* pSamples,
  Execute a given sequence as prepared above. Sequences can be executed in any order, even parallel
  @param iSequence ranges from 0 to number of sequences minus 1
  */
-void WaveletCalculator::executeSequence(int iSequence)
+void TFT::WaveletCalculator::executeSequence(int iSequence)
 {
    waveletVoices[iSequence]->executeSequence(sequenceParameters.frequencyStride, sequenceParameters.timeStride, sequenceParameters.out, sequenceParameters.timeIterBegin, sequenceParameters.timeIterEnd, sequenceParameters.transpose);
 }
@@ -191,7 +190,7 @@ void WaveletCalculator::executeSequence(int iSequence)
  
  @return Number of points calculated, ie nTimeSteps * nFreqSteps */
 
- int WaveletCalculator::extractFrequencySlices(const std::vector<double> & timestamps,
+ int TFT::WaveletCalculator::extractFrequencySlices(const std::vector<double> & timestamps,
                                                const std::vector<double> & frequencies,
                                                TF_DATA_TYPE *  out,
                                                int    nOut,

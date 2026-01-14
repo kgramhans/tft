@@ -52,10 +52,10 @@ namespace TFT {
 *  Initialise the Sine table and Twiddle pointers (bit-reversed pointers)
 *  for the FFT routine.
 */
-unique_ptr<FFTParam> InitializeFFT(size_t fftlen)
+std::unique_ptr<FFTParam> InitializeFFT(size_t fftlen)
 {
    int temp;
-   unique_ptr<FFTParam> h{ new FFTParam };
+   std::unique_ptr<FFTParam> h{ new FFTParam };
 
    /*
    *  FFT size is only half the number of data points
@@ -91,7 +91,7 @@ static std::vector< std::unique_ptr<FFTParam> > hFFTArray(MAX_HFFT);
 
 /* Get a handle to the FFT tables of the desired length */
 /* This version keeps common tables rather than allocating a NEW table every time */
-unique_ptr<FFTParam>  GetFFT(size_t fftlen)
+std::unique_ptr<FFTParam>  GetFFT(size_t fftlen)
 {
    return InitializeFFT(fftlen);
 }

@@ -25,58 +25,57 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "DyadicFilter.h"
 #include <assert.h>
-#include <algorithm>
 #include <cstring>
 
-const TF_DATA_TYPE DyadicFilter::filter_taps[DyadicFilter::cstFilterTaps] = {
- 0.0000615047460950818,
- -0.0001960105579831317,
- -0.001418721078490516,
- -0.0022671370244782027,
- 0.00033743178577584295,
- 0.004306007858819479,
- 0.0012486259526128015,
- -0.0076057135010985915,
- -0.0050496281646187306,
- 0.011727024818497533,
- 0.012261084525415565,
- -0.016283716229471182,
- -0.02486598682440003,
- 0.020744196218163858,
- 0.04732993401408897,
- -0.024508412885638202,
- -0.09559433567532863,
- 0.02702722631214456,
- 0.31468139306046045,
- 0.4720861459531947,
- 0.31468139306046045,
- 0.02702722631214456,
- -0.09559433567532863,
- -0.024508412885638202,
- 0.04732993401408897,
- 0.020744196218163858,
- -0.02486598682440003,
- -0.016283716229471182,
- 0.012261084525415565,
- 0.011727024818497533,
- -0.0050496281646187306,
- -0.0076057135010985915,
- 0.0012486259526128015,
- 0.004306007858819479,
- 0.00033743178577584295,
- -0.0022671370244782027,
- -0.001418721078490516,
- -0.0001960105579831317,
- 0.0000615047460950818
+const TF_DATA_TYPE TFT::DyadicFilter::filter_taps[DyadicFilter::cstFilterTaps] = {
+    0.0003447458782673763,
+    0.0006103374853720806,
+    -0.0008549219193086368,
+    -0.0031822698064080607,
+    -0.0012819812679645117,
+    0.00459280853085552,
+    0.003372387915406647,
+    -0.00750276202736566,
+    -0.008046301348208626,
+    0.010593379830783777,
+    0.015720981218986844,
+    -0.013907244312892805,
+    -0.028387944283777083,
+    0.017004235983861287,
+    0.05037323690390934,
+    -0.01955196418023554,
+    -0.09766172462122302,
+    0.021225674955957806,
+    0.3154139711915178,
+    0.4781902537699047,
+    0.3154139711915178,
+    0.021225674955957806,
+    -0.09766172462122302,
+    -0.01955196418023554,
+    0.05037323690390934,
+    0.017004235983861287,
+    -0.028387944283777083,
+    -0.013907244312892805,
+    0.015720981218986844,
+    0.010593379830783777,
+    -0.008046301348208626,
+    -0.00750276202736566,
+    0.003372387915406647,
+    0.00459280853085552,
+    -0.0012819812679645117,
+    -0.0031822698064080607,
+    -0.0008549219193086368,
+    0.0006103374853720806,
+    0.0003447458782673763
 };
 
-DyadicFilter::DyadicFilter(const unsigned int nOctaves) : vBufferBegin(nOctaves, NULL), vBufferTimeZero(nOctaves, NULL), vBufferLengths(nOctaves, 0)
+TFT::DyadicFilter::DyadicFilter(const unsigned int nOctaves) : vBufferBegin(nOctaves, NULL), vBufferTimeZero(nOctaves, NULL), vBufferLengths(nOctaves, 0)
 {
    assert(nOctaves);
    static_assert(cstFilterTaps & 1, "Filter must have odd length");
 }
 
-void DyadicFilter::doAllocation(unsigned int nSamples, unsigned int nSamplesBefore, unsigned int nSamplesAfter)
+void TFT::DyadicFilter::doAllocation(unsigned int nSamples, unsigned int nSamplesBefore, unsigned int nSamplesAfter)
 {
    // Allocation Already done?
    if (vBufferBegin[0])
@@ -89,7 +88,7 @@ void DyadicFilter::doAllocation(unsigned int nSamples, unsigned int nSamplesBefo
       {
          // We need to re-allocate
          // Discard the current buffers
-         for (vector<TF_DATA_TYPE *>::iterator iter = vBufferBegin.begin(); iter != vBufferBegin.end(); iter++)
+         for (std::vector<TF_DATA_TYPE *>::iterator iter = vBufferBegin.begin(); iter != vBufferBegin.end(); iter++)
          {
             if (*iter)
             {
@@ -111,9 +110,9 @@ void DyadicFilter::doAllocation(unsigned int nSamples, unsigned int nSamplesBefo
    assert(nSamplesBefore >= padding);
    assert(nSamplesAfter >= padding);
    // Define some iterators
-   vector<unsigned int>::iterator iterBufferLength;
-   vector<TF_DATA_TYPE *>::iterator iterBufferBegin;
-   vector<TF_DATA_TYPE *>::iterator iterBufferTimeZero;
+   std::vector<unsigned int>::iterator iterBufferLength;
+   std::vector<TF_DATA_TYPE *>::iterator iterBufferBegin;
+   std::vector<TF_DATA_TYPE *>::iterator iterBufferTimeZero;
    for (iterBufferBegin = vBufferBegin.begin(),
         iterBufferLength = vBufferLengths.begin(),
         iterBufferTimeZero = vBufferTimeZero.begin();
@@ -144,11 +143,11 @@ void DyadicFilter::doAllocation(unsigned int nSamples, unsigned int nSamplesBefo
    }
 }
 
-void DyadicFilter::verify()
+void TFT::DyadicFilter::verify()
 {
    // Define some iterators
-   vector<unsigned int>::iterator iterBufferLength;
-   vector<TF_DATA_TYPE *>::iterator iterBufferBegin;
+   std::vector<unsigned int>::iterator iterBufferLength;
+   std::vector<TF_DATA_TYPE *>::iterator iterBufferBegin;
    for (iterBufferBegin = vBufferBegin.begin(),
         iterBufferLength = vBufferLengths.begin();
         iterBufferBegin != vBufferBegin.end();
@@ -166,12 +165,12 @@ void DyadicFilter::verify()
 /**
  Find lowest octave that still contains frequencies up to fmax
  */
-unsigned int DyadicFilter::findOctave(const float fmax) const
+unsigned int TFT::DyadicFilter::findOctave(const float fmax) const
 {
-   assert(fmax > 0);
+   assert(fmax >= 0);
    float belowF = cstFreqLimit;
    unsigned int octave = 0;
-   while (fmax < belowF && octave < vBufferBegin.size() - 1 )
+   while (fmax <= belowF && octave < vBufferBegin.size() - 1 )
    {
       octave++;   
       belowF /= 2.0;
@@ -179,9 +178,9 @@ unsigned int DyadicFilter::findOctave(const float fmax) const
    return octave;
 }
 
-DyadicFilter::~DyadicFilter()
+TFT::DyadicFilter::~DyadicFilter()
 {
-   for (vector<TF_DATA_TYPE *>::iterator iter = vBufferBegin.begin(); iter != vBufferBegin.end(); iter++)
+   for (std::vector<TF_DATA_TYPE *>::iterator iter = vBufferBegin.begin(); iter != vBufferBegin.end(); iter++)
    {
       if (*iter)
       {
@@ -191,7 +190,7 @@ DyadicFilter::~DyadicFilter()
    }
 }
 
-unsigned int  DyadicFilter::getExtraSamples(unsigned int octaveIndex)
+unsigned int  TFT::DyadicFilter::getExtraSamples(unsigned int octaveIndex)
 {
 
    unsigned int xtra = 0;
@@ -204,7 +203,7 @@ unsigned int  DyadicFilter::getExtraSamples(unsigned int octaveIndex)
    return xtra;
 }
 
-void DyadicFilter::filterSamples(const TF_DATA_TYPE * pSamples, const unsigned int n_samples, unsigned int n_samples_before, unsigned int n_samples_after)
+void TFT::DyadicFilter::filterSamples(const TF_DATA_TYPE * pSamples, const unsigned int n_samples, unsigned int n_samples_before, unsigned int n_samples_after)
 {
    // We must have room
    assert(vBufferBegin.size() && vBufferBegin[0]);
@@ -215,9 +214,9 @@ void DyadicFilter::filterSamples(const TF_DATA_TYPE * pSamples, const unsigned i
    // Take it all in
    // First octave will be initially zeroed in order to provide zeropadding
    memset(vBufferBegin[0],0, sizeof(TF_DATA_TYPE) * vBufferLengths[0]);
-   vector<TF_DATA_TYPE *>::iterator dst = vBufferBegin.begin();
-   vector<TF_DATA_TYPE *>::iterator dst0 = vBufferTimeZero.begin();
-   vector<unsigned int>::iterator countIter = vBufferLengths.begin();
+   std::vector<TF_DATA_TYPE *>::iterator dst = vBufferBegin.begin();
+   std::vector<TF_DATA_TYPE *>::iterator dst0 = vBufferTimeZero.begin();
+   std::vector<unsigned int>::iterator countIter = vBufferLengths.begin();
    memcpy(*dst0 - n_samples_before, pSamples - n_samples_before, sizeof(TF_DATA_TYPE) * (n_samples_before + n_samples + n_samples_after));
 
    TF_DATA_TYPE * src = *dst;
@@ -261,12 +260,12 @@ void DyadicFilter::filterSamples(const TF_DATA_TYPE * pSamples, const unsigned i
  Note that it is ok to request from a negative sample or even a sample beyound number of samples fed in
  We will always get the sample which is clostst to the requested one
  */
-const pair<TF_DATA_TYPE *, unsigned int> DyadicFilter::getSamples(const unsigned int octave, const int fromSample) const
+const std::pair<TF_DATA_TYPE *, unsigned int> TFT::DyadicFilter::getSamples(const unsigned int octave, const int fromSample) const
 {
    assert(octave < vBufferBegin.size());
    if (vBufferBegin[octave] == NULL)
    {
-      return pair<TF_DATA_TYPE *, unsigned int>(NULL, 0);
+      return std::pair<TF_DATA_TYPE *, unsigned int>(NULL, 0);
    }
    int offsetFromZero = (octave == 0) ? fromSample : (((fromSample >> (octave - 1)) + 1) >> 1); // This is rounding!
    TF_DATA_TYPE * from = vBufferTimeZero[octave] + offsetFromZero;
@@ -275,6 +274,6 @@ const pair<TF_DATA_TYPE *, unsigned int> DyadicFilter::getSamples(const unsigned
    assert(from >= vBufferBegin[octave]);
    assert(from < vBufferBegin[octave] + vBufferLengths[octave]);
    assert(nb);
-   return pair<TF_DATA_TYPE *, unsigned int>(from, nb);
+   return std::pair<TF_DATA_TYPE *, unsigned int>(from, nb);
 }
 

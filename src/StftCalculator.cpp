@@ -18,14 +18,13 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "StftCalculator.h"
 #include <assert.h>
-#include <iostream>
 #include <numeric>
 #include <cstring>
 #include <cmath>
 
 using namespace std;
 
-StftCalculator::StftCalculator(unsigned int windowLength,
+TFT::StftCalculator::StftCalculator(unsigned int windowLength,
                   unsigned int transformLength,
                   const TF_DATA_TYPE * pWindow) : nWindowLength(windowLength), nTransformLength(transformLength), nSamples(0), vWindow(pWindow, pWindow + windowLength)
 {
@@ -41,11 +40,11 @@ StftCalculator::StftCalculator(unsigned int windowLength,
    }
 }
 
-StftCalculator::~StftCalculator()
+TFT::StftCalculator::~StftCalculator()
 {
 }
    
-unsigned int  StftCalculator::doTransform(const TF_DATA_TYPE* pSamples, unsigned int _nSamples, unsigned int nValidSamplesBefore, unsigned int nValidSamplesAfter)
+unsigned int  TFT::StftCalculator::doTransform(const TF_DATA_TYPE* pSamples, unsigned int _nSamples, unsigned int nValidSamplesBefore, unsigned int nValidSamplesAfter)
 {
    unsigned int nPre;
    unsigned int nPost;
@@ -80,7 +79,7 @@ unsigned int  StftCalculator::doTransform(const TF_DATA_TYPE* pSamples, unsigned
    return 0;
 }
    
-void  StftCalculator::prepare(unsigned int nSamples, unsigned int resolution, unsigned int & nPre, unsigned int & nPost)
+void  TFT::StftCalculator::prepare(unsigned int nSamples, unsigned int resolution, unsigned int & nPre, unsigned int & nPost)
 {
    // Disregard most of the parameters. Simply fill in the returns
    // Assume "zeropoint" of window is at sample N/2
@@ -88,7 +87,7 @@ void  StftCalculator::prepare(unsigned int nSamples, unsigned int resolution, un
    nPost = nPre -1;
 }
    
-int StftCalculator::extractFrequencySlices(const std::vector<double> & timestamps,
+int TFT::StftCalculator::extractFrequencySlices(const std::vector<double> & timestamps,
                                       const std::vector<double> & frequencies,
                                       TF_DATA_TYPE *  out,
                                       int    nOut,
