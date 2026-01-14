@@ -25,6 +25,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "tft/WaveletVoice.h"
 #include <assert.h>
+#include <tuple>
 
 TFT::WaveletVoice::WaveletVoice(const DyadicFilter * dFilter,
                            const double fCenter,
