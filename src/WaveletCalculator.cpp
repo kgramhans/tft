@@ -16,36 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include <assert.h>
-#include <cmath>
 #include <cstring>
 #include "tft/WaveletCalculator.h"
-#include "tft/ConfinedGaussianWaveletVoice.h"
 
 TFT::WaveletCalculator::WaveletCalculator(unsigned int nOctaves,
                                      double fmax,
                                      float Q,
-                                     float overlapPercentage) : dyadicFilter(nOctaves), nSamples(0)
+                                          float overlapPercentage) : WaveletContainer(nOctaves, fmax, Q, overlapPercentage)
 {
-   assert(nOctaves > 0);
-   assert(fmax > 0 && fmax <= 0.5);
-   assert(Q > 0.5);
-   assert(overlapPercentage < 100); // negative is ok, though unusual
-   
-   // Calculate increment
-   float increment = (Q - 0.5) / (Q + 0.5 - overlapPercentage/100) ;
-   assert(increment < 1); //Avoid recursion
-   
-   double fCenter = fmax;  // Place first filter as high as possible
-   double flo = fCenter * std::sqrt(increment);
-   double fhi = flo / increment;
-   int nVoices = (int)(nOctaves * std::log(2) /( -std::log(increment)));
-   for (int i = nVoices; i--; fCenter *= increment, fhi = flo, flo *= increment)
-   {
-      assert(fhi > fCenter);
-      assert(fCenter > flo);
-      waveletVoices.push_back(new ConfinedGaussianWaveletVoice(fCenter, flo, fhi, Q, overlapPercentage, &dyadicFilter));
-      waveletVoices.back()->dump();
-   }
 }
 
 TFT::WaveletCalculator::~WaveletCalculator()
@@ -56,26 +34,6 @@ TFT::WaveletCalculator::~WaveletCalculator()
       waveletVoices.pop_back();
    }
 }
-
-/**
- Tell caller about the amount of padding required (left,right) when making calls to doTransform.
- This is essential information to the caller when seeking to avoid artificial transients at the edges of signal
- being investigated
- */
- void TFT::WaveletCalculator::getRequiredPaddingSamples(unsigned int &nPre, unsigned int & nPost) const
- {
-    unsigned int pre(0);
-    unsigned int post(0);
-    nPre = 0;
-    nPost = 0;
-    for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
-    {
-       (*iter)->getRequiredPaddingSamples(pre, post);
-       nPre = std::max(pre, nPre);
-       nPost = std::max(post, nPost);
-    }
- }
-    
 
 /**
  do a time frequency transform calculating the internal representation in the time/frequency plane
@@ -98,7 +56,7 @@ TFT::WaveletCalculator::~WaveletCalculator()
     unsigned int pre, post;
     prepare(nSamples, 0, pre, post); // Here we prepare without limiting resolution. If prepare was already called with limiting resolution, such resolution will be preserved
     // Feed data into our dyadic filter
-    dyadicFilter.filterSamples(pSamples, nSamples, nValidSamplesBefore, nValidSamplesAfter);
+    dyadicFilter.filterSamples(pSamples, nSamples, std::min(nValidSamplesBefore, pre), std::min(nValidSamplesAfter, post));
     
     // And then ask all voices to co-operate
     unsigned int rval = 0;
@@ -117,7 +75,7 @@ void  TFT::WaveletCalculator::prepare(unsigned int n_samples, unsigned int resol
     nSamples = n_samples;
     for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
     {
-       (*iter)->allocateResult(nSamples, resolution);
+       (*iter)->allocateResult(nSamples, resolution, false);
     }
     
     // Then do allocation of dyadic filter since we now do know requirements
@@ -221,7 +179,7 @@ void TFT::WaveletCalculator::executeSequence(int iSequence)
        assert(*iterFreq <= 0.5);
 
        // Locate the voice closest to the asked-for frequency
-       const WaveletVoiceUnbuffered * pVoice = NULL;
+       const WaveletVoice * pVoice = NULL;
        
        for (auto iter = waveletVoices.cbegin(); iter != waveletVoices.cend(); iter++)
        {

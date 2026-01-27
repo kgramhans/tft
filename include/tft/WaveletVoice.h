@@ -23,28 +23,90 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //  Created by Klaus Gram-Hansen on 17/11/2025.
 //
 
-#ifndef WaveletVoice_h
-#define WaveletVoice_h
+#ifndef WaveletVoiceUnbuffered_h
+#define WaveletVoiceUnbuffered_h
 
+#include <stddef.h>
+#include <vector>
+#include <algorithm>
+#include <iterator>
 #include "DyadicFilter.h"
-#include "WaveletVoiceUnbuffered.h"
 
 namespace TFT {
-    class WaveletVoice : public WaveletVoiceUnbuffered
+    class WaveletVoice
     {
     public:
-       virtual void dump() const override;
-       virtual ~WaveletVoice();
-       virtual void allocateResult(unsigned int nSamples, unsigned int resolution) override;
-       int transform() override;
-       TF_DATA_TYPE get(double timestamp) const override;
+        virtual void dump() const;
+        virtual ~WaveletVoice();
+        virtual void getRequiredPaddingSamples(unsigned int & pre, unsigned int & post) const;
+        virtual void allocateResult(unsigned int nSamples, unsigned int resolution, bool withBuffer);
+        virtual int transform();
+        virtual TF_DATA_TYPE get(double timestamp) const {
+            return hasResultBuffer() ? getBuffered(timestamp) : getUnbuffered(timestamp);
+        }
+        virtual TF_DATA_TYPE getUnbuffered(double timestamp) const;
+        virtual TF_DATA_TYPE getBuffered(double timestamp) const;
+        std::vector<TF_DATA_TYPE> getWavelet() const;
+        bool containsFrequency(double f) { return f >= fLow && f < fHigh;}
+        bool frequencyWithin(float lo, float hi) {return getUndecimatedFrequency() >= lo && getUndecimatedFrequency() < hi || getUndecimatedFrequency() >= hi && getUndecimatedFrequency() < lo;}
+        void executeSequence(int freqStride, int timeStride, TF_DATA_TYPE * out, std::vector<double>::const_iterator timeIterBegin, std::vector<double>::const_iterator timeIterEnd, bool transpose);
+        std::vector<TF_DATA_TYPE> constructVoiceSignal() const;
+        void clearRegion(bool enable) { vRegionCrossings.clear(); hasRegion = enable;}
+        void addCrossing(float t) {vRegionCrossings.push_back(t); std::sort(vRegionCrossings.begin(), vRegionCrossings.end());} // Keep the list sorted
+        bool isWithinRegion(float t) const;
+        double getUndecimatedFrequency() const {return frequency;}
 
     protected:
-       WaveletVoice(const DyadicFilter * dFilter,
-                    const double fCenter,
+        WaveletVoice(const DyadicFilter * dFilter,
+                    double fCenter,
                     double flow,
                     double fhigh);
-       TF_DATA_TYPE * resultSqr;
+        static constexpr float pi = 3.14159265359;
+        virtual std::pair<unsigned int, unsigned int>  calculateResultLenAndStep(unsigned int _resolution) const;
+        double getDecimatedFrequency() const {return frequency * (1 << octave);}
+        double getWaveletEnergy() const {return waveletEnergy;}
+
+        const DyadicFilter * dyadicFilter;
+        std::vector<float> vRegionCrossings;
+        bool hasRegion;
+        unsigned int octave;
+        TF_DATA_TYPE * waveletRe;
+        TF_DATA_TYPE * waveletIm;
+        TF_DATA_TYPE * waveletEnvelope;
+        double waveletEnergy;
+        unsigned int waveletHalfLength;
+        unsigned int resultLen;
+        float duration;
+        unsigned int transformStep;
+        unsigned int resultStep;
+        unsigned int transformLength;
+        double frequency;
+        double fLow;
+        double fHigh;
+        mutable struct
+        {
+          const void * key;
+          TF_DATA_TYPE value;
+          void invalidate()
+          {
+             key = NULL;
+          }
+          TF_DATA_TYPE set(const void * k, TF_DATA_TYPE val)
+          {
+             key = k;
+             value = val;
+             return value;
+          }
+          bool lookup(const void * k, TF_DATA_TYPE & rval) const
+          {
+             if (k != key) return false;
+             rval = value;
+             return true;
+          }
+        } valueCache;
+        std::vector<TF_DATA_TYPE> resultZ; ///< This member points to interleaved (Re,Im) data
+   private:
+        bool hasResultBuffer() const { return !resultZ.empty();};
     };
 }
-#endif /* WaveletVoice_h */
+#endif // !WaveletVoiceUnbuffered_h

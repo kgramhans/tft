@@ -15,12 +15,21 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+#FetchContent_Declare(
+#  tft
+#  GIT_REPOSITORY https://github.com/kgramhans/tft.git
+#  GIT_TAG main
+#)
+#FetchContent_MakeAvailable(tft)
+
 enable_testing()
 
 add_executable(
   tft_gtest
   test_dyadicfilter.cpp
-  test_waveletvoice.cpp
+  test_waveletvoice_unbuffered.cpp
+  test_waveletvoice_buffered.cpp
+  test_wavelettransformer.cpp
 )
 target_include_directories(tft_gtest PUBLIC "../include")
 target_link_libraries(

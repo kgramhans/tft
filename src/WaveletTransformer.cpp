@@ -1,0 +1,135 @@
+/**
+Time Frequency Calculator Library
+Copyright (C) 2025  Klaus Gram-Hansen
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+#include <assert.h>
+#include <cstring>
+#include "tft/WaveletTransformer.h"
+
+TFT::WaveletTransformer::WaveletTransformer(unsigned int nOctaves,
+                                     double fmax,
+                                     float Q,
+                                     float overlapPercentage) : WaveletContainer(nOctaves, fmax, Q, overlapPercentage)
+{
+}
+
+TFT::WaveletTransformer::~WaveletTransformer()
+{
+}
+
+   
+ /**
+  Reset any internal state to that of a newly created object. This may be a time-saver as opposed to free/allocate af new object
+ */
+void  TFT::WaveletTransformer::prepare(unsigned int n_samples, unsigned int & nPre, unsigned int & nPost)
+{
+    nSamples = n_samples;
+    for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
+    {
+       (*iter)->allocateResult(nSamples, 0, true);
+    }
+    
+    // Then do allocation of dyadic filter since we now do know requirements
+    getRequiredPaddingSamples(nPre, nPost);
+    dyadicFilter.doAllocation(nSamples, nPre, nPost);
+}
+
+unsigned int TFT::WaveletTransformer::forwardTransform(const TF_DATA_TYPE* pSamples, unsigned int nSamples, unsigned int nValidSamplesBefore, unsigned int nValidSamplesAfter) {
+    unsigned int pre, post;
+    prepare(nSamples, pre, post);
+    // Feed data into our dyadic filter
+    dyadicFilter.filterSamples(pSamples, nSamples, std::min(nValidSamplesBefore, pre), std::min(nValidSamplesAfter, post));
+
+    // And then ask all voices to co-operate
+    unsigned int rval = 0;
+    for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
+    {
+        rval += (*iter)->transform();
+    }
+    return rval;
+}
+
+unsigned int TFT::WaveletTransformer::backwardTransform(std::vector<TF_DATA_TYPE> & signal, unsigned int fromSample, unsigned int toSample) const {
+    assert(toSample > fromSample);
+    assert(toSample <= nSamples);
+    signal = std::vector<TF_DATA_TYPE>(toSample - fromSample, 0);
+
+    // Iterate all voices and ask for contribution
+    for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
+    {
+        auto v = (*iter)->constructVoiceSignal();
+        for (int inx = fromSample; inx < toSample; inx++) {
+            signal[inx - fromSample] += v[inx];
+        }
+    }
+    return signal.size();
+}
+
+/**
+ * @brief setPolygonRegion Set a region in time/frequency plane. Only points inside the region will be used for backwardTransform
+ * @param region : Sequence of inter-connected polygon points. Last point is connected to first point
+ * @return true if region could be interpreted
+ */
+bool TFT::WaveletTransformer::setPolygonRegion(const std::vector<std::pair<float, float>> & region) {
+    // Iterate all voices and clear crossings
+    for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
+    {
+        (*iter)->clearRegion(region.size() >= 3);
+    }
+
+    if (region.size() < 3) {
+        return false;   // Not a region
+    }
+
+    // Iterate all line segments and add crossings with waveletVoices
+    auto p1 = region.cbegin(), p2 = region.cbegin();
+    for ( ; p2 != region.cend(); p2++) {
+        if (++p1 == region.cend()) {
+            p1 = region.cbegin(); // Close the loop
+        }
+
+        if (*p1 == *p2) {
+            continue; // Ignore double points
+        }
+
+        // Iterate all voices and record crossings
+        for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++) {
+            float tCross(0);
+            bool hasCross(false);
+            if (p1->first == p2->first) {
+                tCross = p1->first;
+                hasCross = (*iter)->frequencyWithin(p1->second, p2->second);
+            } else {
+                if (p1->second == p2->second) {
+                    // We define this as no cross
+                    hasCross = false;
+                } else {
+                    hasCross = (*iter)->frequencyWithin(p1->second, p2->second);
+                    float a = (p2->second - p1->second) / (p2->first - p1->first);
+                    float b = p1->second - a * p1->first;
+                    tCross = ((*iter)->getUndecimatedFrequency() - b) / a;
+                }
+            }
+            if (hasCross) {
+                (*iter)->addCrossing(tCross);
+            }
+        }
+    }
+
+    return true;
+}
+
+

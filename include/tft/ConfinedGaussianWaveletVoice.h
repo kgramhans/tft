@@ -29,7 +29,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "WaveletVoice.h"
 
 namespace TFT {
-    class ConfinedGaussianWaveletVoice : public WaveletVoiceUnbuffered // Two possibilities here: WaveletVoice is faster, WaveletVoiceUnbuffered uses less memory. Optimal choice depends on usage scenario
+    class ConfinedGaussianWaveletVoice : public WaveletVoice
     {
     public:
        /**
@@ -61,30 +61,37 @@ namespace TFT {
               upperF = 0.25 + 0.52 /0.1 /55 = 0.34
 
         @param fCenter is the center frequency for the wavelet to generate
-        @param flow is the lower frequency that must be taken care of by this wavelet (affects only containsFrequency() member). Otherwise has no effect
-        @param fhigh is the upper frequency that must be taken care of by this wavelet (affects only containsFrequency() member). Otherwise has no effect
-        @param Q is the Q factor for the wavelet to be defines
-        @param overlapPercentage is the nominel overlap that should be implemented by this wavelet voice. Usage patterns will determine if this is in effect. Overlap is here referred to as overlap between RMS durations of wavelet
+        @param fDelay is a testing feature that allows for distortion of generated wavelet by phase-shifting the modulating frequency. Normally use 2nd form of constructor or set fDelay=0
+        @param flow is the lower frequency that must be taken care of by this wavelet (affects containsFrequency() member). Affects backward transform by assigning weight to the WaveletVoice
+        @param fhigh is the upper frequency that must be taken care of by this wavelet (affects containsFrequency() member). Affects backward transform by assigning weight to the WaveletVoice
+        @param Q is the Q factor for the wavelet to be defined
+        @param overlapPercentage is the nominal overlap that should be implemented by this wavelet voice. Usage patterns will determine if this is in effect. Overlap is here referred to as overlap between RMS durations of wavelet
         @param DyadicFilter is a reference for a dyadic filter that can provide us with data
 
         */
-       ConfinedGaussianWaveletVoice(double fCenter,
-                     double flow,
-                     double fhigh,
-                    double Q,
-                    const float overlapPercentage,
-                    const DyadicFilter * dFilter);
-       virtual void dump() const override;
-       virtual ~ConfinedGaussianWaveletVoice();
+        ConfinedGaussianWaveletVoice(double fCenter,
+                                     double flow,
+                                     double fhigh,
+                                     double Q,
+                                     const float overlapPercentage,
+                                     const DyadicFilter * dFilter) : ConfinedGaussianWaveletVoice(fCenter, 0,  flow, fhigh, Q, overlapPercentage, dFilter) {}
+        ConfinedGaussianWaveletVoice(double fCenter,
+                                     double fDelay,
+                                     double flow,
+                                     double fhigh,
+                                     double Q,
+                                     const float overlapPercentage,
+                                     const DyadicFilter * dFilter);
+        virtual void dump() const override;
+        virtual ~ConfinedGaussianWaveletVoice();
     protected:
-       static constexpr float sigma = 0.1;
-       static constexpr float bw70Ratio = 6.5;
-       static constexpr float pi = 3.14159265359;
-       unsigned int waveletLength;
-       double q;
+        static constexpr float sigma = 0.1;
+        static constexpr float bw70Ratio = 6.5;
+        unsigned int waveletLength;
+        double q;
 
-       float gaussian(float x);
-       float approximateConfinedGaussian(float x);
+        float gaussian(float x);
+        float approximateConfinedGaussian(float x);
     };
 }
 #endif // !CGWaveletVoice_h
