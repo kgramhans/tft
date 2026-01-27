@@ -16,12 +16,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #pragma once
-#include "TimeFrequencyCalculator.h"
-#include "DyadicFilter.h"
-#include "ConfinedGaussianWaveletVoice.h"
+#include "WaveletContainer.h"
+#include "tft/TimeFrequencyCalculator.h"
 
 namespace TFT {
-    class WaveletCalculator : public ITimeFrequencyCalculator
+    class WaveletCalculator : public WaveletContainer, public ITimeFrequencyCalculator
     {
     public:
        /**
@@ -158,16 +157,7 @@ namespace TFT {
           std::vector<double>::const_iterator timeIterEnd;
           bool transpose;
        } sequenceParameters;
-       DyadicFilter dyadicFilter;
-       std::vector<WaveletVoiceUnbuffered *> waveletVoices;
-       unsigned int nSamples;
 
-       /**
-        Tell caller about the amount of padding required (left,right) when making calls to doTransform.
-        This is essential information to the caller when seeking to avoid artificial transients at the edges of signal
-        being investigated
-        */
-       virtual void getRequiredPaddingSamples(unsigned int &nPre, unsigned int & nPost) const;
     };
 }
 

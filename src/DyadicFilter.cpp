@@ -26,6 +26,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "tft/DyadicFilter.h"
 #include <assert.h>
 #include <cstring>
+#include <iostream>
 
 const TF_DATA_TYPE TFT::DyadicFilter::filter_taps[DyadicFilter::cstFilterTaps] = {
     0.0003447458782673763,
@@ -275,5 +276,28 @@ const std::pair<TF_DATA_TYPE *, unsigned int> TFT::DyadicFilter::getSamples(cons
    assert(from < vBufferBegin[octave] + vBufferLengths[octave]);
    assert(nb);
    return std::pair<TF_DATA_TYPE *, unsigned int>(from, nb);
+}
+
+std::vector<TF_DATA_TYPE> TFT::DyadicFilter::upsample(const TF_DATA_TYPE * pSamples, unsigned int n_samples, unsigned int n_samples_before, unsigned int n_samples_after) {
+    std::vector<TF_DATA_TYPE> vDst(2 * n_samples + 2 * getUpsamplingPaddingSize(), 0);
+    const TF_DATA_TYPE * pSrc = pSamples - getUpsamplingPaddingSize();
+    assert(n_samples_before >= getUpsamplingPaddingSize());
+    assert(n_samples_after >= getUpsamplingPaddingSize());
+
+    // Filter into destination buffer
+    for (int destInx = 0; destInx < 2 * n_samples + cstFilterTaps - 1; destInx++) {
+        int srcInx = (destInx + 1) >> 1;
+        int fltInx = destInx & 0x1;
+        TF_DATA_TYPE sum = 0;
+        for (int i = fltInx; i < cstFilterTaps; i += 2) {
+            sum += pSrc[srcInx + (i >> 1)] * filter_taps[i];
+        }
+        vDst[destInx] = 2.0 * sum;
+    }
+    return vDst;
+}
+
+std::vector<TF_DATA_TYPE> TFT::DyadicFilter::upsample(const std::vector<TF_DATA_TYPE> vSamples) {
+    return upsample(&vSamples[getUpsamplingPaddingSize()], vSamples.size() - 2 * getUpsamplingPaddingSize(), getUpsamplingPaddingSize(), getUpsamplingPaddingSize());
 }
 

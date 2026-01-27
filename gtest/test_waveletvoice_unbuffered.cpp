@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <tft/tft.h>
 #include <tft/RealFFTf.h>
+#include <tft/ConfinedGaussianWaveletVoice.h>
 #include <random>
 
 using namespace TFT;
@@ -8,7 +9,7 @@ using namespace std;
 
 
 // Test WaveletVoice
-TEST(WaveletVoice, ConfinedGaussianConstruction) {
+TEST(WaveletVoiceUnbuffered, ConfinedGaussianConstruction) {
     double Q = 10.0;
     double overlap = 50.0;
     int n_octaves = 10;
@@ -46,14 +47,20 @@ TEST(WaveletVoice, ConfinedGaussianConstruction) {
     while (runs--) {
         frequency = dist2500(rng) / 10000.0;
         Q = dist100(rng);
-        EXPECT_NO_THROW(
-            ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q, overlap, &filter);
-            ) << "Q: " << Q << ", f; " << frequency;
+        if (Q > 1) {
+            EXPECT_NO_THROW(
+                ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q, overlap, &filter);
+                ) << "Q: " << Q << ", f; " << frequency;
+        } else {
+            EXPECT_DEBUG_DEATH(
+                ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q, overlap, &filter), "Assertion"
+                ) << "Q: " << Q << ", f; " << frequency;
+        }
     }
 
 }
 
-TEST(WaveletVoice, GeneralConfiguration) {
+TEST(WaveletVoiceUnbuffered, GeneralConfiguration) {
     double Q = 10.0;
     double overlap = 99.999; // For this get as close as possible to continuous transform
     int n_octaves = 10;
@@ -75,7 +82,7 @@ TEST(WaveletVoice, GeneralConfiguration) {
     {
         frequency = 0.2;
         ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q, overlap, &filter);
-        w.allocateResult(n_samples, 0);
+        w.allocateResult(n_samples, 0, false);
         w.getRequiredPaddingSamples(pre, post);
     }
     for (int i = n_octaves - 1; i--;)
@@ -83,7 +90,7 @@ TEST(WaveletVoice, GeneralConfiguration) {
         unsigned int _pre, _post;
         frequency /= 2;
         ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q, overlap, &filter);
-        w.allocateResult(n_samples, 0);
+        w.allocateResult(n_samples, 0, false);
         w.getRequiredPaddingSamples(_pre, _post);
         EXPECT_GT(_pre, 2 * pre) << "Frequency : " << frequency;
         EXPECT_LT(_pre, 3 * pre) << "Frequency : " << frequency;
@@ -99,7 +106,7 @@ TEST(WaveletVoice, GeneralConfiguration) {
         frequency = 0.2;
         Q = 2;
         ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q, overlap, &filter);
-        w.allocateResult(n_samples, 0);
+        w.allocateResult(n_samples, 0, false);
         w.getRequiredPaddingSamples(pre, post);
     }
     for (int i = 10; i--;)
@@ -107,7 +114,7 @@ TEST(WaveletVoice, GeneralConfiguration) {
         unsigned int _pre, _post;
         Q *= 2;
         ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q, overlap, &filter);
-        w.allocateResult(n_samples, 0);
+        w.allocateResult(n_samples, 0, false);
         w.getRequiredPaddingSamples(_pre, _post);
         EXPECT_GE(_pre, 2 * pre) << "Q : " << Q;
         EXPECT_LE(_pre, 2 * pre + 1) << "Q : " << Q;
@@ -138,12 +145,12 @@ TEST(WaveletVoice, GeneralConfiguration) {
     EXPECT_DEBUG_DEATH(
     {
         ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q, overlap, &filter);
-        w.allocateResult(0, 1);
+        w.allocateResult(0, 1, false);
     }
         , "Assertion");
 }
 
-TEST(WaveletVoice, Transformation) {
+TEST(WaveletVoiceUnbuffered, Transformation) {
     double Q = 10.0;
     double overlap = 99.999; // For this get as close as possible to continuous transform
     int n_octaves = 1;       // For simplicity have just a single octave
@@ -157,19 +164,13 @@ TEST(WaveletVoice, Transformation) {
     // * WaveletVoice does support buffered transform
     // Currently only support for the former has been implemented test-wise
 
-    // Verify that we have test support
-    if (nullptr != dynamic_cast<WaveletVoice *>(&w)) {
-        // Fail the test case since not implemented
-        GTEST_SKIP() << "No support for testing transformation with WaveletVoice base class";
-    }
-
     // We proceed with test case by supressing a delta function
     // This should return the impulse response of the wavelet that we can then use for testing properties of the wavelet
     int n_samples = 1024; // Assumed sufficiently large to contain the wavelet duration
     unsigned int pre, post;
 
     // Mimic allocation scheme already implemented in WaveletCalculator
-    w.allocateResult(n_samples, 1);
+    w.allocateResult(n_samples, 1, false);
     w.getRequiredPaddingSamples(pre, post);
     filter.doAllocation(n_samples, pre, post);
 

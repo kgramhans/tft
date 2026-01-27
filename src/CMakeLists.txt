@@ -7,10 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(SOURCE_FILES
 WaveletCalculator.cpp
+WaveletTransformer.cpp
+WaveletContainer.cpp
 StftCalculator.cpp
 DyadicFilter.cpp
 WaveletVoice.cpp
-WaveletVoiceUnbuffered.cpp
 ConfinedGaussianWaveletVoice.cpp
 RealFFTf.cpp
 )

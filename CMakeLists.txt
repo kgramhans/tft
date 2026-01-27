@@ -10,4 +10,4 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 # add the subdirs
 add_subdirectory(src)
 #add_subdirectory(test)
-#add_subdirectory(gtest)
+add_subdirectory(gtest)

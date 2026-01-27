@@ -30,17 +30,18 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 using namespace std;
 
 TFT::ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
-                 double flow,
-                 double fhigh,
+                double fDelay,
+                double flow,
+                double fhigh,
                 double Q,
                 const float overlapPercentage,
-                const DyadicFilter * dFilter) : WaveletVoiceUnbuffered(dFilter, fCenter, flow, fhigh), q(Q)
+                const DyadicFilter * dFilter) : WaveletVoice(dFilter, fCenter, flow, fhigh), q(Q)
 {
    // When constructing, firstly let us know about the upper frequency limit by the wavelet to be defined
    assert(fCenter > 0 && fCenter <= 0.5);
    assert(dFilter);
    assert(overlapPercentage < 100.0);
-   assert(Q > 0);
+   assert(Q > 1); // Otherwise wavelet simply gets too degenerated
    float deltaF = fCenter / Q / 2.0;
    float fmax = bw70Ratio * deltaF + fCenter;
    
@@ -49,6 +50,7 @@ TFT::ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
    
    // recalculate fCenter relative to actual octave
    fCenter *= (1 << octave);
+   fDelay /= (1 << octave);
    
    // Calculate Len of wavelet, halfLen = (1 / (2 * pi * sigma * fCenter / Q)) / 2
    float fltWaveletLength = Q / (2.0 * pi * sigma * fCenter) ;
@@ -56,43 +58,54 @@ TFT::ConfinedGaussianWaveletVoice::ConfinedGaussianWaveletVoice(double fCenter,
    waveletLength = 2 * waveletHalfLength + 1;
    waveletRe = new TF_DATA_TYPE[waveletHalfLength + 1];
    waveletIm = new TF_DATA_TYPE[waveletHalfLength + 1];
-   
-   float sum;
-   waveletRe[0] = sum = approximateConfinedGaussian(waveletHalfLength);
-   waveletIm[0] = 0;
+   waveletEnvelope = new TF_DATA_TYPE[waveletHalfLength + 1];
+
+   TF_DATA_TYPE sum = waveletEnvelope[0] = approximateConfinedGaussian(waveletHalfLength); // Assure we always have the same SUM (fDelay parameter is only in use for normalisation)
+   waveletEnergy = waveletEnvelope[0] * waveletEnvelope[0];
+   TF_DATA_TYPE argument = 2 * pi * fCenter * fDelay;
+   waveletRe[0] = waveletEnvelope[0] * cos(argument);
+   waveletIm[0] = waveletEnvelope[0] * sin(argument);
    
    for (int i = 1; i <= waveletHalfLength; i++)
    {
       //     wavelet = np.append(wavelet, env * math.cos(2 * math.pi * fc * xs[inx]))
-      float argument = 2 * pi * fCenter * i;
-      float envelope = approximateConfinedGaussian(waveletHalfLength + i);
-      sum += 2* envelope;
+      argument = 2 * pi * fCenter * (i + fDelay);
+      TF_DATA_TYPE envelope = approximateConfinedGaussian(waveletHalfLength + i);
+      sum += 2 * envelope;
+      waveletEnergy += 2 * envelope * envelope;
       waveletRe[i] = envelope * cos(argument);
       waveletIm[i] = envelope * sin(argument);
+      waveletEnvelope[i] = envelope;
    }
-   float factor = 2 / sum; // Factor "2" bcs of one-sided spectrum
+   TF_DATA_TYPE factor = 2 / sum; // Factor "2" bcs of one-sided spectrum
+   waveletEnergy *= factor * factor;
    
    for (int i = 0; i <= waveletHalfLength; i++)
    {
       waveletRe[i] *= factor;
       waveletIm[i] *= factor;
+      waveletEnvelope[i] *= factor;
    }
    
    // Calculate duration (measured in samples at current rate
    // Approximate temporal resolution is dT =  (2 * halfLen + 1) * sigma
    duration = 2.0 * waveletLength *sigma;
-   transformStep = (unsigned int)(duration * (100-overlapPercentage) / 100.0 + 0.5);
-   if (transformStep < 1)
+   float step = duration * (100-overlapPercentage) / 100.0;
+
+   // Select power-of-two just larger. Not chosing any integer is due to inverse transform
+   int exponent = (int)floor(log2(step));
+   if (exponent < 0)
    {
-      transformStep = 1;
+       exponent = 0;
    }
+   transformStep = 1 << exponent;
 }
 
 
 void TFT::ConfinedGaussianWaveletVoice::dump() const
 {
-   cout << "Approximate Confined Gaussian Wavelet in octave " << octave << ", windowL " << waveletLength <<", duration " << duration << ", step " << transformStep << "[ " << fLow << "; " << frequency << "; " << fHigh << " ]" << endl;
-   WaveletVoiceUnbuffered::dump();
+   cout << "Approximate Confined Gaussian Wavelet in octave " << octave << ", windowL " << waveletLength <<", duration " << duration << ", step " << transformStep << "[ " << fLow << "; " << getUndecimatedFrequency() << "; " << fHigh << " ]" << endl;
+   WaveletVoice::dump();
 }
 
 TFT::ConfinedGaussianWaveletVoice::~ConfinedGaussianWaveletVoice()

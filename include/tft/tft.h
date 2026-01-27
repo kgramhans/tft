@@ -21,5 +21,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "version.h"
 #include "TimeFrequencyCalculator.h"
 #include "WaveletCalculator.h"
+#include "WaveletTransformer.h"
 #include "StftCalculator.h"
 

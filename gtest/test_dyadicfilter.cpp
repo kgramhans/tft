@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <tft/tft.h>
-#include <iomanip>
 
 using namespace TFT;
 using namespace std;
@@ -143,5 +142,58 @@ TEST(DyadicFilter, SineWave) {
             EXPECT_LT(db, -90);
         }
         nb /= 2;
+    }
+}
+
+TEST(DyadicFilter, upsample) {
+    // Let's upsample one period of a sine wave and verify that it gets through as expected with no added noise
+    int padding = 50;
+    int samples = 4;
+    std::vector<TF_DATA_TYPE> v(2 * padding + 4);
+    for (int i = 0; i < v.size(); i++) {
+        if (i & 0x1) {
+            v[i] = 0;
+        } else {
+            v[i] = (i & 0x2) - 1;
+        }
+    }
+
+    // Verify that padding is required
+    EXPECT_DEBUG_DEATH(DyadicFilter::upsample(&v[padding], samples, DyadicFilter::getUpsamplingPaddingSize() - 1, padding), "Assertion");       // This would fail as long as we do not provide enough samples
+    EXPECT_DEBUG_DEATH(DyadicFilter::upsample(&v[padding], samples, padding, DyadicFilter::getUpsamplingPaddingSize() - 1), "Assertion");       // This would fail as long as we do not provide enough samples
+
+    v = DyadicFilter::upsample(&v[padding], samples, padding, padding);
+    v = DyadicFilter::upsample(v);
+    v = DyadicFilter::upsample(v);
+
+    // Do an FFT of the now 32 samples long signal and let's see the result
+    auto handle = TFT::GetFFT(samples << 3);
+    TFT::RealFFTf(&v[DyadicFilter::getUpsamplingPaddingSize()], handle.get());
+
+    // Convert to magnitude
+    vector<TF_DATA_TYPE> power(handle->Points);
+    power[0] = v[DyadicFilter::getUpsamplingPaddingSize()] * v[DyadicFilter::getUpsamplingPaddingSize()] / handle->Points / handle->Points / 4;
+
+    for (int i = 1; i < handle->Points; i++) {
+        const int index = handle->BitReversed[i];
+        const float re = v[index + DyadicFilter::getUpsamplingPaddingSize()] / handle->Points / 2, im = v[index + DyadicFilter::getUpsamplingPaddingSize() + 1] / handle->Points / 2;
+        power[i] = re * re + im * im;
+    }
+
+    // Verify that any other level is below 90 dB
+    for (int i = 0; i < handle->Points; i++) {
+        float db = 0.0;
+        if (power[i] == 0.0) {
+            db = -100;
+        } else {
+            db = 10 * log(power[i] / 0.25);
+        }
+        if (i == 1) {
+            // Verify that level is within 0.1 dB
+            EXPECT_GT(db, -0.1);
+            EXPECT_LT(db, 0.1);
+        } else {
+            EXPECT_LT(db, -90);
+        }
     }
 }
