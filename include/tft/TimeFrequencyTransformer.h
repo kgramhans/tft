@@ -43,6 +43,22 @@ namespace TFT {
         virtual void  prepare(unsigned int nSamples, unsigned int & nPre, unsigned int & nPost) = 0;
 
         /**
+         * @brief prepareParallelSequences
+         * @param pSamples
+         * @param nSamples
+         * @param nValidSamplesBefore
+         * @param nValidSamplesAfter
+         * @return Number of sequences that can be invoked in parallel
+         */
+        virtual int prepareParallelForwardSequences(const TF_DATA_TYPE* pSamples, unsigned int nSamples, unsigned int nValidSamplesBefore, unsigned int nValidSamplesAfter) = 0;
+
+        /**
+        Execute a given sequence as prepared above. Sequences can be executed in any order, even parallel
+        @param iSequence ranges from 0 to number of sequences minus 1
+        */
+        virtual void executeForwardSequence(int iSequence) = 0;
+
+        /**
          * @brief forwardTransform
          * @param pSamples Points to samples to-be-transformed
          * @param nSamples Number of samples to be transformed
@@ -53,20 +69,23 @@ namespace TFT {
         virtual unsigned int forwardTransform(const TF_DATA_TYPE* pSamples, unsigned int nSamples, unsigned int nValidSamplesBefore, unsigned int nValidSamplesAfter) = 0;
 
         /**
-         * @brief backwardTransform. Bring back the signal in the time-domain
-         * @param signal This is whereto the signal will be stored
-         * @param fromSample starting sample of transform (< nSamples from forward transform)
-         * @param toSample ending sample of transform (<= nSamples from forward transform)
-         * @return length of signal upon return
-         */
-        virtual unsigned int backwardTransform(std::vector<TF_DATA_TYPE> & signal, unsigned int fromSample, unsigned int toSample) const = 0;
-
-        /**
          * @brief backwardTransform short form
          * @param signal allocated to hold generated signal
-         * @return  length of signal upon return
+         * @return  length of signal upon return. Will equal nSamples originally passed to our transform
          */
-        virtual unsigned int backwardTransform(std::vector<TF_DATA_TYPE> & signal) const { return backwardTransform(signal, 0, signal.size());}
+        virtual unsigned int backwardTransform(std::vector<TF_DATA_TYPE> & signal) const = 0;
+
+        /**
+         * @brief prepareParallelSequences. Once sequences have been performed, use backwardTransform() to retrieve the result
+         * @return Number of sequences that can be invoked in parallel
+         */
+        virtual int prepareParallelBackwardSequences() const = 0;
+
+        /**
+        Execute a given sequence as prepared above. Sequences can be executed in any order, even parallel
+        @param iSequence ranges from 0 to number of sequences minus 1
+        */
+        virtual void executeBackwardSequence(int iSequence) const = 0;
 
         /**
          * @brief setPolygonRegion Set a region in time/frequency plane. Only points inside the region will be used for backwardTransform

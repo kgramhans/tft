@@ -27,7 +27,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <assert.h>
 #include <tuple>
 #include <cmath>
-#include <iostream>
 
 TFT::WaveletVoice::WaveletVoice(const DyadicFilter * dFilter,
                            double fCenter,
@@ -45,7 +44,8 @@ TFT::WaveletVoice::WaveletVoice(const DyadicFilter * dFilter,
     frequency(fCenter),
     fLow(flow),
     fHigh(fhigh),
-    resultZ(0)
+    resultZ(0),
+    voiceSignalBuffer(0)
 {
 }
 
@@ -285,6 +285,13 @@ void TFT::WaveletVoice::executeSequence(int freqStride, int timeStride, TF_DATA_
 }
 
 std::vector<TF_DATA_TYPE> TFT::WaveletVoice::constructVoiceSignal() const {
+    // If someone has already constructed a result, we will be using that
+    if (!voiceSignalBuffer.empty()) {
+        auto rval = voiceSignalBuffer;
+        voiceSignalBuffer.clear();
+        return rval;
+    }
+
     assert(hasResultBuffer());
     assert(resultStep >> octave == transformStep); // Otherwise we do not fit nicely to dyadic grid
     std::vector<TF_DATA_TYPE> vRe(waveletHalfLength + (resultLen - 1) * transformStep + 1 + waveletHalfLength, 0);
@@ -355,6 +362,11 @@ std::vector<TF_DATA_TYPE> TFT::WaveletVoice::constructVoiceSignal() const {
     }
 
     return signal; // Voila!
+}
+
+void TFT::WaveletVoice::constructVoiceSignalBuffer() const
+{
+    voiceSignalBuffer = constructVoiceSignal();
 }
 
 std::vector<TF_DATA_TYPE> TFT::WaveletVoice::getWavelet() const {

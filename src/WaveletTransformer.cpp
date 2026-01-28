@@ -62,17 +62,27 @@ unsigned int TFT::WaveletTransformer::forwardTransform(const TF_DATA_TYPE* pSamp
     return rval;
 }
 
-unsigned int TFT::WaveletTransformer::backwardTransform(std::vector<TF_DATA_TYPE> & signal, unsigned int fromSample, unsigned int toSample) const {
-    assert(toSample > fromSample);
-    assert(toSample <= nSamples);
-    signal = std::vector<TF_DATA_TYPE>(toSample - fromSample, 0);
+int TFT::WaveletTransformer::prepareParallelBackwardSequences() const
+{
+    return waveletVoices.size();
+}
+
+void TFT::WaveletTransformer::executeBackwardSequence(int iSequence) const
+{
+    assert(iSequence >= 0);
+    assert(iSequence < waveletVoices.size());
+    waveletVoices[iSequence]->constructVoiceSignalBuffer();
+}
+
+unsigned int TFT::WaveletTransformer::backwardTransform(std::vector<TF_DATA_TYPE> & signal) const {
+    signal = std::vector<TF_DATA_TYPE>(nSamples, 0);
 
     // Iterate all voices and ask for contribution
     for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
     {
         auto v = (*iter)->constructVoiceSignal();
-        for (int inx = fromSample; inx < toSample; inx++) {
-            signal[inx - fromSample] += v[inx];
+        for (int inx = 0; inx < nSamples; inx++) {
+            signal[inx] += v[inx];
         }
     }
     return signal.size();
@@ -131,5 +141,34 @@ bool TFT::WaveletTransformer::setPolygonRegion(const std::vector<std::pair<float
 
     return true;
 }
+
+/**
+ * @brief prepareParallelSequences
+ * @param pSamples
+ * @param nSamples
+ * @param nValidSamplesBefore
+ * @param nValidSamplesAfter
+ * @return Number of sequences that can be invoked in parallel
+ */
+int TFT::WaveletTransformer::prepareParallelForwardSequences(const TF_DATA_TYPE* pSamples, unsigned int nSamples, unsigned int nValidSamplesBefore, unsigned int nValidSamplesAfter) {
+    // Process samples into dyadic filter - otherwise parallel work is not possible
+    unsigned int pre, post;
+    prepare(nSamples, pre, post);
+    // Feed data into our dyadic filter
+    dyadicFilter.filterSamples(pSamples, nSamples, nValidSamplesBefore, nValidSamplesAfter);
+
+    return (int) waveletVoices.size();  // All must do some work
+}
+
+/**
+    Execute a given sequence as prepared above. Sequences can be executed in any order, even parallel
+    @param iSequence ranges from 0 to number of sequences minus 1
+    */
+void TFT::WaveletTransformer::executeForwardSequence(int iSequence) {
+    assert(iSequence >= 0 && iSequence < waveletVoices.size());
+    waveletVoices[iSequence]->transform();
+}
+
+
 
 
