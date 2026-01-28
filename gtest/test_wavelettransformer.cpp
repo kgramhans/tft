@@ -49,6 +49,79 @@ TEST(WaveletTransformer, ForwardBackward) {
     delete tft;
 }
 
+// Test that we get equal results for sequenced and non-sequenced transforms
+TEST(WaveletTransformer, Sequenced) {
+    int octaves = 10;
+    double fmax = 0.4;
+    float Q = 10.0;
+    float overlap = 75.0;
+    float nSamples = 1024;
+    vector<TF_DATA_TYPE> vKernel(nSamples, 0);
+
+    // Use a confined Gaussian as our test signal (limited in time and frequency)
+    DyadicFilter dummyFilter(10);
+    ConfinedGaussianWaveletVoice w(0.1, 0, 0.5, Q, 0, &dummyFilter);
+    auto vw = w.getWavelet();
+    int halfSize = vw.size() >> 1;
+    for (int i = 0; i < vw.size(); i++) {
+        vKernel[nSamples / 2 - halfSize + i] = vw[i];
+    }
+
+    ITimeFrequencyTransformer * tft1 = new WaveletTransformer(octaves, fmax, Q, overlap);
+    int nb = tft1->forwardTransform(&vKernel[0], vKernel.size(), 0, 0);
+    EXPECT_GT(nb, 0);
+
+    ITimeFrequencyTransformer * tft2 = new WaveletTransformer(octaves, fmax, Q, overlap);
+    int sequences = tft2->prepareParallelForwardSequences(&vKernel[0], vKernel.size(), 0, 0);
+    for (int i = sequences; i--;) {
+        tft2->executeForwardSequence(i);
+    }
+
+    vector<TF_DATA_TYPE> vSignal1(vKernel.size());
+    vector<TF_DATA_TYPE> vSignal2(vKernel.size());
+    vector<TF_DATA_TYPE> vSignal3(vKernel.size());
+    int nb1 = tft1->backwardTransform(vSignal1);
+    int nb2 = tft2->backwardTransform(vSignal2);
+    sequences = tft2->prepareParallelBackwardSequences();
+    for (int i = sequences; i--;) {
+        tft2->executeBackwardSequence(i);
+    }
+    int nb3 = tft2->backwardTransform(vSignal3);
+    EXPECT_EQ(nb1, nb2);
+    EXPECT_EQ(nb1, nb3);
+
+    for (int i = 0; i < nb1; i++) {
+        EXPECT_EQ(vSignal1[i], vSignal2[i]);
+        EXPECT_EQ(vSignal1[i], vSignal3[i]);
+    }
+
+    delete tft1;
+    delete tft2;
+}
+
+
+TEST(WaveletTransformer, Timing) {
+    int octaves = 10;
+    double fmax = 0.4;
+    float Q = 10.0;
+    float overlap = 75.0;
+    float nSamples = 44100;
+    vector<TF_DATA_TYPE> vKernel(nSamples, 0);
+
+    // Use a delta function
+    vKernel[nSamples/2] = 1;
+
+    ITimeFrequencyTransformer * tft = new WaveletTransformer(octaves, fmax, Q, overlap);
+    int nb = tft->forwardTransform(&vKernel[0], vKernel.size(), 0, 0);
+    EXPECT_GT(nb, 0);
+
+    vector<TF_DATA_TYPE> vSignal(vKernel.size());
+    nb = tft->backwardTransform(vSignal);
+    EXPECT_EQ(nb, vKernel.size());
+
+    delete tft;
+}
+
 // Test WaveletVoice with a simple forward/backward transform on a time/frequency localized signal
 TEST(WaveletTransformer, Region) {
     int octaves = 10;

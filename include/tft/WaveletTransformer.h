@@ -51,6 +51,22 @@ public:
     virtual void  prepare(unsigned int nSamples, unsigned int & nPre, unsigned int & nPost) override;
 
     /**
+         * @brief prepareParallelSequences
+         * @param pSamples
+         * @param nSamples
+         * @param nValidSamplesBefore
+         * @param nValidSamplesAfter
+         * @return Number of sequences that can be invoked in parallel
+         */
+    virtual int prepareParallelForwardSequences(const TF_DATA_TYPE* pSamples, unsigned int nSamples, unsigned int nValidSamplesBefore, unsigned int nValidSamplesAfter) override;
+
+    /**
+        Execute a given sequence as prepared above. Sequences can be executed in any order, even parallel
+        @param iSequence ranges from 0 to number of sequences minus 1
+        */
+    virtual void executeForwardSequence(int iSequence) override;
+
+    /**
      * @brief forwardTransform See parent interface ITimeFrequencyTransformer
      * @param pSamples
      * @param nSamples
@@ -67,7 +83,19 @@ public:
      * @param toSample
      * @return
      */
-    virtual unsigned int backwardTransform(std::vector<TF_DATA_TYPE> & signal, unsigned int fromSample, unsigned int toSample) const override;
+    virtual unsigned int backwardTransform(std::vector<TF_DATA_TYPE> & signal) const override;
+
+    /**
+         * @brief prepareParallelSequences
+         * @return Number of sequences that can be invoked in parallel
+         */
+    virtual int prepareParallelBackwardSequences() const override;
+
+    /**
+        Execute a given sequence as prepared above. Sequences can be executed in any order, even parallel
+        @param iSequence ranges from 0 to number of sequences minus 1
+        */
+    virtual void executeBackwardSequence(int iSequence) const override;
 
     /**
      * @brief setPolygonRegion Set a region in time/frequency plane. Only points inside the region will be used for backwardTransform

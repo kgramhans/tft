@@ -51,6 +51,7 @@ namespace TFT {
         bool frequencyWithin(float lo, float hi) {return getUndecimatedFrequency() >= lo && getUndecimatedFrequency() < hi || getUndecimatedFrequency() >= hi && getUndecimatedFrequency() < lo;}
         void executeSequence(int freqStride, int timeStride, TF_DATA_TYPE * out, std::vector<double>::const_iterator timeIterBegin, std::vector<double>::const_iterator timeIterEnd, bool transpose);
         std::vector<TF_DATA_TYPE> constructVoiceSignal() const;
+        void constructVoiceSignalBuffer() const;
         void clearRegion(bool enable) { vRegionCrossings.clear(); hasRegion = enable;}
         void addCrossing(float t) {vRegionCrossings.push_back(t); std::sort(vRegionCrossings.begin(), vRegionCrossings.end());} // Keep the list sorted
         bool isWithinRegion(float t) const;
@@ -105,6 +106,7 @@ namespace TFT {
           }
         } valueCache;
         std::vector<TF_DATA_TYPE> resultZ; ///< This member points to interleaved (Re,Im) data
+        mutable std::vector<TF_DATA_TYPE> voiceSignalBuffer;    ///< Used for storage of interim results during parallel execution
    private:
         bool hasResultBuffer() const { return !resultZ.empty();};
     };
