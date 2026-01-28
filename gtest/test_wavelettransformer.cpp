@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <tft/tft.h>
 #include <random>
+#include <thread>
 
 using namespace TFT;
 using namespace std;
@@ -57,6 +58,7 @@ TEST(WaveletTransformer, Sequenced) {
     float overlap = 75.0;
     float nSamples = 1024;
     vector<TF_DATA_TYPE> vKernel(nSamples, 0);
+    queue<thread> threadPool;
 
     // Use a confined Gaussian as our test signal (limited in time and frequency)
     DyadicFilter dummyFilter(10);
@@ -71,10 +73,20 @@ TEST(WaveletTransformer, Sequenced) {
     int nb = tft1->forwardTransform(&vKernel[0], vKernel.size(), 0, 0);
     EXPECT_GT(nb, 0);
 
-    ITimeFrequencyTransformer * tft2 = new WaveletTransformer(octaves, fmax, Q, overlap);
+    WaveletTransformer * tft2 = new WaveletTransformer(octaves, fmax, Q, overlap);
     int sequences = tft2->prepareParallelForwardSequences(&vKernel[0], vKernel.size(), 0, 0);
     for (int i = sequences; i--;) {
-        tft2->executeForwardSequence(i);
+        if (threadPool.size() == thread::hardware_concurrency()) {
+            threadPool.front().join();
+            threadPool.pop();
+        }
+        threadPool.push(thread(&WaveletTransformer::executeForwardSequence, tft2, i)); //tft2->executeForwardSequence(i);
+    }
+
+    // Join all remaining threads
+    while (!threadPool.empty()) {
+        threadPool.front().join();
+        threadPool.pop();
     }
 
     vector<TF_DATA_TYPE> vSignal1(vKernel.size());
@@ -84,8 +96,19 @@ TEST(WaveletTransformer, Sequenced) {
     int nb2 = tft2->backwardTransform(vSignal2);
     sequences = tft2->prepareParallelBackwardSequences();
     for (int i = sequences; i--;) {
-        tft2->executeBackwardSequence(i);
+        if (threadPool.size() == thread::hardware_concurrency()) {
+            threadPool.front().join();
+            threadPool.pop();
+        }
+        threadPool.push(thread(&WaveletTransformer::executeBackwardSequence, tft2, i));
     }
+
+    // Join all remaining threads
+    while (!threadPool.empty()) {
+        threadPool.front().join();
+        threadPool.pop();
+    }
+
     int nb3 = tft2->backwardTransform(vSignal3);
     EXPECT_EQ(nb1, nb2);
     EXPECT_EQ(nb1, nb3);
@@ -100,7 +123,7 @@ TEST(WaveletTransformer, Sequenced) {
 }
 
 
-TEST(WaveletTransformer, Timing) {
+TEST(WaveletTransformer, TimingSingleThreaded) {
     int octaves = 10;
     double fmax = 0.4;
     float Q = 10.0;
@@ -117,6 +140,56 @@ TEST(WaveletTransformer, Timing) {
 
     vector<TF_DATA_TYPE> vSignal(vKernel.size());
     nb = tft->backwardTransform(vSignal);
+    EXPECT_EQ(nb, vKernel.size());
+
+    delete tft;
+}
+
+TEST(WaveletTransformer, TimingMultiThreaded) {
+    int octaves = 10;
+    double fmax = 0.4;
+    float Q = 10.0;
+    float overlap = 75.0;
+    float nSamples = 44100;
+    vector<TF_DATA_TYPE> vKernel(nSamples, 0);
+    queue<thread> threadPool;
+
+    // Use a delta function
+    vKernel[nSamples/2] = 1;
+
+    WaveletTransformer * tft = new WaveletTransformer(octaves, fmax, Q, overlap);
+    int sequences = tft->prepareParallelForwardSequences(&vKernel[0], vKernel.size(), 0, 0);
+    for (int i = sequences; i--;) {
+        if (threadPool.size() == thread::hardware_concurrency()) {
+            threadPool.front().join();
+            threadPool.pop();
+        }
+        threadPool.push(thread(&WaveletTransformer::executeForwardSequence, tft, i)); //tft2->executeForwardSequence(i);
+    }
+    // Join all remaining threads
+    while (!threadPool.empty()) {
+        threadPool.front().join();
+        threadPool.pop();
+    }
+
+
+    vector<TF_DATA_TYPE> vSignal(vKernel.size());
+    sequences = tft->prepareParallelBackwardSequences();
+    for (int i = sequences; i--;) {
+        if (threadPool.size() == thread::hardware_concurrency()) {
+            threadPool.front().join();
+            threadPool.pop();
+        }
+        threadPool.push(thread(&WaveletTransformer::executeBackwardSequence, tft, i));
+    }
+
+    // Join all remaining threads
+    while (!threadPool.empty()) {
+        threadPool.front().join();
+        threadPool.pop();
+    }
+
+    int nb = tft->backwardTransform(vSignal);
     EXPECT_EQ(nb, vKernel.size());
 
     delete tft;
