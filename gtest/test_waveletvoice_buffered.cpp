@@ -228,7 +228,7 @@ TEST(WaveletVoiceBuffered, Transformation) {
     // We re-use the time signal array herefor
     w.transform();
 
-    auto v = w.constructVoiceSignal();
+    auto v = w.constructVoiceSignal(PolygonRegion());
 
     // We expect a signal centered around sample 512 and frequency 0.1 and which has BWrms =  0.1 / 20 / 2 = 0.0025 and rms duration exceeding 1 / (4 * pi * BWrms) = 31.8 (by how much?)
     // First time domain

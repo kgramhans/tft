@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 
 set(SOURCE_FILES
+PolygonRegion.cpp
 WaveletCalculator.cpp
 WaveletTransformer.cpp
 WaveletContainer.cpp

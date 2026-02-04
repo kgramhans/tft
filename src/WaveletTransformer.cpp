@@ -30,7 +30,7 @@ TFT::WaveletTransformer::~WaveletTransformer()
 {
 }
 
-   
+
  /**
   Reset any internal state to that of a newly created object. This may be a time-saver as opposed to free/allocate af new object
  */
@@ -41,7 +41,7 @@ void  TFT::WaveletTransformer::prepare(unsigned int n_samples, unsigned int & nP
     {
        (*iter)->allocateResult(nSamples, 0, true);
     }
-    
+
     // Then do allocation of dyadic filter since we now do know requirements
     getRequiredPaddingSamples(nPre, nPost);
     dyadicFilter.doAllocation(nSamples, nPre, nPost);
@@ -71,7 +71,7 @@ void TFT::WaveletTransformer::executeBackwardSequence(int iSequence) const
 {
     assert(iSequence >= 0);
     assert(iSequence < waveletVoices.size());
-    waveletVoices[iSequence]->constructVoiceSignalBuffer();
+    waveletVoices[iSequence]->constructVoiceSignalBuffer(*this);
 }
 
 unsigned int TFT::WaveletTransformer::backwardTransform(std::vector<TF_DATA_TYPE> & signal) const {
@@ -80,66 +80,12 @@ unsigned int TFT::WaveletTransformer::backwardTransform(std::vector<TF_DATA_TYPE
     // Iterate all voices and ask for contribution
     for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
     {
-        auto v = (*iter)->constructVoiceSignal();
+        auto v = (*iter)->constructVoiceSignal(*this);
         for (int inx = 0; inx < nSamples; inx++) {
             signal[inx] += v[inx];
         }
     }
     return signal.size();
-}
-
-/**
- * @brief setPolygonRegion Set a region in time/frequency plane. Only points inside the region will be used for backwardTransform
- * @param region : Sequence of inter-connected polygon points. Last point is connected to first point
- * @return true if region could be interpreted
- */
-bool TFT::WaveletTransformer::setPolygonRegion(const std::vector<std::pair<float, float>> & region) {
-    // Iterate all voices and clear crossings
-    for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
-    {
-        (*iter)->clearRegion(region.size() >= 3);
-    }
-
-    if (region.size() < 3) {
-        return false;   // Not a region
-    }
-
-    // Iterate all line segments and add crossings with waveletVoices
-    auto p1 = region.cbegin(), p2 = region.cbegin();
-    for ( ; p2 != region.cend(); p2++) {
-        if (++p1 == region.cend()) {
-            p1 = region.cbegin(); // Close the loop
-        }
-
-        if (*p1 == *p2) {
-            continue; // Ignore double points
-        }
-
-        // Iterate all voices and record crossings
-        for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++) {
-            float tCross(0);
-            bool hasCross(false);
-            if (p1->first == p2->first) {
-                tCross = p1->first;
-                hasCross = (*iter)->frequencyWithin(p1->second, p2->second);
-            } else {
-                if (p1->second == p2->second) {
-                    // We define this as no cross
-                    hasCross = false;
-                } else {
-                    hasCross = (*iter)->frequencyWithin(p1->second, p2->second);
-                    float a = (p2->second - p1->second) / (p2->first - p1->first);
-                    float b = p1->second - a * p1->first;
-                    tCross = ((*iter)->getUndecimatedFrequency() - b) / a;
-                }
-            }
-            if (hasCross) {
-                (*iter)->addCrossing(tCross);
-            }
-        }
-    }
-
-    return true;
 }
 
 /**
@@ -168,6 +114,15 @@ void TFT::WaveletTransformer::executeForwardSequence(int iSequence) {
     assert(iSequence >= 0 && iSequence < waveletVoices.size());
     waveletVoices[iSequence]->transform();
 }
+
+/**
+ * @brief setRegion
+ * @param region
+ */
+void TFT::WaveletTransformer::setPolygonRegion(const std::vector<std::pair<float, float>> & region) {
+    setCorners(region);
+}
+
 
 
 
