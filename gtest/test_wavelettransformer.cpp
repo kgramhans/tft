@@ -95,6 +95,10 @@ TEST(WaveletTransformer, Sequenced) {
     int nb1 = tft1->backwardTransform(vSignal1);
     int nb2 = tft2->backwardTransform(vSignal2);
     sequences = tft2->prepareParallelBackwardSequences();
+
+    // In below loop we do not fully exploit concurrency since it is not necessarily the front thread which finishes first
+    // But at least we get some degree of parallell threads
+    // Doing more would need some degree of sync in order to monitor threads
     for (int i = sequences; i--;) {
         if (threadPool.size() == thread::hardware_concurrency()) {
             threadPool.front().join();
@@ -226,15 +230,15 @@ TEST(WaveletTransformer, Region) {
 
     vector<pair<float, float>> region;
 
-    // Apply an invalid region and let's see that it makes no difference
+    // Apply an invalid region and let's see that it generates an empty output
     region.clear();
     region.push_back(make_pair(nSamples / 2.0, 0.0));
     region.push_back(make_pair(nSamples / 2.0, 0.5));
-    EXPECT_EQ(tft->setPolygonRegion(region), false);
+    tft->setPolygonRegion(region);
     nb = tft->backwardTransform(vSignal);
     EXPECT_EQ(nb, vKernel.size());
     for (int i = 0; i < vKernel.size(); i++) {
-        EXPECT_EQ(vSignal[i], vSignalRef[i]);
+        EXPECT_EQ(vSignal[i], 0);
     }
 
     // Apply an empty region. Then we should get a zero signal
@@ -242,7 +246,7 @@ TEST(WaveletTransformer, Region) {
     region.push_back(make_pair(nSamples + 1 , 0.0));
     region.push_back(make_pair(nSamples + 1, 0.25));
     region.push_back(make_pair(nSamples + 1, 0.5));
-    EXPECT_EQ(tft->setPolygonRegion(region), true);
+    tft->setPolygonRegion(region);
     nb = tft->backwardTransform(vSignal);
     EXPECT_EQ(nb, vKernel.size());
     for (int i = 0; i < vKernel.size(); i++) {
@@ -252,7 +256,7 @@ TEST(WaveletTransformer, Region) {
     region.push_back(make_pair(nSamples + 1 , 0.0));
     region.push_back(make_pair(nSamples + 2, 0.25));
     region.push_back(make_pair(nSamples + 3, 0.5));
-    EXPECT_EQ(tft->setPolygonRegion(region), true);
+    tft->setPolygonRegion(region);
     nb = tft->backwardTransform(vSignal);
     EXPECT_EQ(nb, vKernel.size());
     for (int i = 0; i < vKernel.size(); i++) {
@@ -265,7 +269,7 @@ TEST(WaveletTransformer, Region) {
     region.push_back(make_pair(-1, 0.5));
     region.push_back(make_pair(nSamples, 0.5));
     region.push_back(make_pair(nSamples, 0.0));
-    EXPECT_EQ(tft->setPolygonRegion(region), true);
+    tft->setPolygonRegion(region);
     nb = tft->backwardTransform(vSignal);
     EXPECT_EQ(nb, vKernel.size());
     for (int i = 0; i < vKernel.size(); i++) {
@@ -278,7 +282,7 @@ TEST(WaveletTransformer, Region) {
     region.push_back(make_pair(-1, 0.5));
     region.push_back(make_pair(nSamples / 2, 0.5));
     region.push_back(make_pair(nSamples / 2, 0.0));
-    EXPECT_EQ(tft->setPolygonRegion(region), true);
+    tft->setPolygonRegion(region);
     nb = tft->backwardTransform(vSignal);
     EXPECT_EQ(nb, vKernel.size());
     double powerRef = 0;
@@ -294,7 +298,7 @@ TEST(WaveletTransformer, Region) {
     region.push_back(make_pair(2 * nSamples, 0.5));
     region.push_back(make_pair(nSamples / 2, 0.5));
     region.push_back(make_pair(nSamples / 2, 0.0));
-    EXPECT_EQ(tft->setPolygonRegion(region), true);
+    tft->setPolygonRegion(region);
     nb = tft->backwardTransform(vSignal);
     EXPECT_EQ(nb, vKernel.size());
     double powerRight = 0;
@@ -310,7 +314,7 @@ TEST(WaveletTransformer, Region) {
     region.push_back(make_pair(-1, kernelFreq));
     region.push_back(make_pair(2 * nSamples , kernelFreq));
     region.push_back(make_pair(2 * nSamples, 0.0));
-    EXPECT_EQ(tft->setPolygonRegion(region), true);
+    tft->setPolygonRegion(region);
     nb = tft->backwardTransform(vSignal);
     EXPECT_EQ(nb, vKernel.size());
     double powerLF = 0;
@@ -324,7 +328,7 @@ TEST(WaveletTransformer, Region) {
     region.push_back(make_pair(-1, kernelFreq));
     region.push_back(make_pair(2 * nSamples , kernelFreq));
     region.push_back(make_pair(2 * nSamples, 1.0));
-    EXPECT_EQ(tft->setPolygonRegion(region), true);
+    tft->setPolygonRegion(region);
     nb = tft->backwardTransform(vSignal);
     EXPECT_EQ(nb, vKernel.size());
     double powerHF = 0;
@@ -336,15 +340,15 @@ TEST(WaveletTransformer, Region) {
     EXPECT_GT(powerLF + powerHF, 0.5 * powerRef); //(a+b)(a+b) > a*a + b*b
 
 
-    // Apply an invalid region again and let's see that it makes no difference
+    // Apply an invalid region again and let's see that we again have zero output
     region.clear();
     region.push_back(make_pair(nSamples / 2.0, 0.0));
     region.push_back(make_pair(nSamples / 2.0, 0.5));
-    EXPECT_EQ(tft->setPolygonRegion(region), false);
+    tft->setPolygonRegion(region);
     nb = tft->backwardTransform(vSignal);
     EXPECT_EQ(nb, vKernel.size());
     for (int i = 0; i < vKernel.size(); i++) {
-        EXPECT_EQ(vSignal[i], vSignalRef[i]);
+        EXPECT_EQ(vSignal[i], 0);
     }
 
     delete tft;

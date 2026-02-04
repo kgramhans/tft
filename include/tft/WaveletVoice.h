@@ -28,9 +28,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <stddef.h>
 #include <vector>
-#include <algorithm>
-#include <iterator>
 #include "DyadicFilter.h"
+#include "tft/Region.h"
 
 namespace TFT {
     class WaveletVoice
@@ -50,10 +49,8 @@ namespace TFT {
         bool containsFrequency(double f) { return f >= fLow && f < fHigh;}
         bool frequencyWithin(float lo, float hi) {return getUndecimatedFrequency() >= lo && getUndecimatedFrequency() < hi || getUndecimatedFrequency() >= hi && getUndecimatedFrequency() < lo;}
         void executeSequence(int freqStride, int timeStride, TF_DATA_TYPE * out, std::vector<double>::const_iterator timeIterBegin, std::vector<double>::const_iterator timeIterEnd, bool transpose);
-        std::vector<TF_DATA_TYPE> constructVoiceSignal() const;
-        void constructVoiceSignalBuffer() const;
-        void clearRegion(bool enable) { vRegionCrossings.clear(); hasRegion = enable;}
-        void addCrossing(float t) {vRegionCrossings.push_back(t); std::sort(vRegionCrossings.begin(), vRegionCrossings.end());} // Keep the list sorted
+        std::vector<TF_DATA_TYPE> constructVoiceSignal(const IRegion & region) const;
+        void constructVoiceSignalBuffer(const IRegion & region) const;
         bool isWithinRegion(float t) const;
         double getUndecimatedFrequency() const {return frequency;}
 
@@ -68,8 +65,6 @@ namespace TFT {
         double getWaveletEnergy() const {return waveletEnergy;}
 
         const DyadicFilter * dyadicFilter;
-        std::vector<float> vRegionCrossings;
-        bool hasRegion;
         unsigned int octave;
         TF_DATA_TYPE * waveletRe;
         TF_DATA_TYPE * waveletIm;
