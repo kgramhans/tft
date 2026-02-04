@@ -92,7 +92,7 @@ namespace TFT {
          * @param region : Sequence of inter-connected polygon points. Last point is connected to first point
          * @return true if region could be interpreted
          */
-        virtual bool setPolygonRegion(const std::vector<std::pair<float, float>> & region) = 0;
+        virtual void setPolygonRegion(const std::vector<std::pair<float, float>> & region) = 0;
 
         /**
         Virtual destructor does nothing - but must be defined

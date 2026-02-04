@@ -20,13 +20,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <stddef.h>
 #include "WaveletContainer.h"
 #include "TimeFrequencyTransformer.h"
+#include "PolygonRegion.h"
 
 namespace TFT {
 
 
 /**
      */
-class WaveletTransformer : public WaveletContainer, public ITimeFrequencyTransformer
+class WaveletTransformer : public WaveletContainer, public ITimeFrequencyTransformer, protected PolygonRegion
 {
 public:
     /**
@@ -102,6 +103,6 @@ public:
      * @param region : Sequence of inter-connected polygon points. Last point is connected to first point
      * @return true if region could be interpreted
      */
-    virtual bool setPolygonRegion(const std::vector<std::pair<float, float>> & region) override;
+    virtual void setPolygonRegion(const std::vector<std::pair<float, float>> & region) override;
 };
 }

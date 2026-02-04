@@ -33,8 +33,6 @@ TFT::WaveletVoice::WaveletVoice(const DyadicFilter * dFilter,
                            double flow,
                            double fhigh) :
     dyadicFilter(dFilter),
-    vRegionCrossings(0),
-    hasRegion(false),
     octave(0),
     waveletHalfLength(0),
     resultLen(0),
@@ -284,7 +282,7 @@ void TFT::WaveletVoice::executeSequence(int freqStride, int timeStride, TF_DATA_
    }
 }
 
-std::vector<TF_DATA_TYPE> TFT::WaveletVoice::constructVoiceSignal() const {
+std::vector<TF_DATA_TYPE> TFT::WaveletVoice::constructVoiceSignal(const IRegion & region) const {
     // If someone has already constructed a result, we will be using that
     if (!voiceSignalBuffer.empty()) {
         auto rval = voiceSignalBuffer;
@@ -306,7 +304,7 @@ std::vector<TF_DATA_TYPE> TFT::WaveletVoice::constructVoiceSignal() const {
         int iTime = inx * transformStep;
 
         // Check if we are within region or not
-        if (!isWithinRegion(iTime << octave)) {
+        if (!region.isWithin(iTime << octave, getUndecimatedFrequency())) {
             continue;   // Exclude from summation
         }
 
@@ -364,9 +362,9 @@ std::vector<TF_DATA_TYPE> TFT::WaveletVoice::constructVoiceSignal() const {
     return signal; // Voila!
 }
 
-void TFT::WaveletVoice::constructVoiceSignalBuffer() const
+void TFT::WaveletVoice::constructVoiceSignalBuffer(const IRegion & region) const
 {
-    voiceSignalBuffer = constructVoiceSignal();
+    voiceSignalBuffer = constructVoiceSignal(region);
 }
 
 std::vector<TF_DATA_TYPE> TFT::WaveletVoice::getWavelet() const {
@@ -381,18 +379,4 @@ std::vector<TF_DATA_TYPE> TFT::WaveletVoice::getWavelet() const {
     }
 
     return w;
-}
-
-bool TFT::WaveletVoice::isWithinRegion(float t) const {
-    if (!hasRegion) {
-        return true;
-    }
-    auto lower =
-        std::lower_bound(vRegionCrossings.cbegin(), vRegionCrossings.cend(), t);
-    return (lower == vRegionCrossings.cend())
-               ? false
-               : (bool)(0x1 &
-                         std::distance(
-                             vRegionCrossings.cbegin(),
-                             lower)); // Uneven number of crossings means within
 }
