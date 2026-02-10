@@ -8,10 +8,10 @@
 
 
 namespace TFT {
-    class PolygonRegion : public IRegion {
+    class PolygonRegionHorizontal : public IRegion {
     public:
-        PolygonRegion();
-        PolygonRegion(const std::vector<std::pair<float, float>> & region);
+        PolygonRegionHorizontal();
+        PolygonRegionHorizontal(const std::vector<std::pair<float, float>> & region);
 
         /**
          * @brief setCorners
@@ -28,6 +28,14 @@ namespace TFT {
          */
         bool isWithin(float abscissa, float ordinate) const override;
 
+        /**
+         * @brief clone
+         * @return pointer to yet another instance
+         */
+        std::unique_ptr<IRegion> cloneRegion() const override {return std::make_unique<PolygonRegionHorizontal>(*this);};
+
+        ~PolygonRegionHorizontal() {}
+
     private:
         /**
          * @brief abscissassOf
@@ -36,8 +44,8 @@ namespace TFT {
          */
         std::vector<float> abscissasOf(float ordinate) const;
 
+    protected:
         std::vector<std::pair<float, float>> corners;
-
         mutable struct {
             float key;
             std::vector<float> values;

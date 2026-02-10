@@ -7,14 +7,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(SOURCE_FILES
 PolygonRegion.cpp
+PolygonRegionVertical.cpp
 WaveletCalculator.cpp
 WaveletTransformer.cpp
 WaveletContainer.cpp
 StftCalculator.cpp
 DyadicFilter.cpp
 WaveletVoice.cpp
+ConfinedGaussian.cpp
 ConfinedGaussianWaveletVoice.cpp
 RealFFTf.cpp
+StftMoment.cpp
+StftTransformer.cpp
 )
 add_library(tft ${SOURCE_FILES})
 target_include_directories(tft PUBLIC "../include")

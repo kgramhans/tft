@@ -1,47 +1,26 @@
-/**
-Time Frequency Calculator Library
-Copyright (C) 2025  Klaus Gram-Hansen
+#ifndef STFTTRANSFORMER_H
+#define STFTTRANSFORMER_H
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
-
-#pragma once
-#include <stddef.h>
-#include "WaveletContainer.h"
-#include "TimeFrequencyTransformer.h"
-#include "PolygonRegion.h"
+#include "PolygonRegionVertical.h"
+#include "tft.h"
+#include "tft/ConfinedGaussian.h"
+#include "tft/StftMoment.h"
 
 namespace TFT {
 
-
-/**
-     */
-class WaveletTransformer : public WaveletContainer, public ITimeFrequencyTransformer, protected PolygonRegionHorizontal
+class StftTransformer : public ITimeFrequencyTransformer, protected PolygonRegionVertical, protected ConfinedGaussian
 {
 public:
     /**
-     * @brief WaveletTransformer Construct a wavelet transformer
+     * @brief StftTransformer Construct a STFT transformer
      * @param nOctaves Number of octaves to cover
      * @param fmax maximum frequency to cover
      * @param Q Q factor of implied Gaussian wavelet
      * @param overlapPercentage Overlap of transform. Applies to both time and frequency domains. More overlap means more work, but improves quality. 75% is a good default value
      */
-    WaveletTransformer( unsigned int nOctaves,
-                      double fmax,
-                      float Q,
-                      float overlapPercentage);
-    ~WaveletTransformer();
+    StftTransformer(unsigned int windowLength,
+                       float overlapPercentage);
+    ~StftTransformer();
 
     /**
      * @brief prepare See parent interface interface ITimeFrequencyTransformer
@@ -101,8 +80,26 @@ public:
     /**
      * @brief setPolygonRegion Set a region in time/frequency plane. Only points inside the region will be used for backwardTransform
      * @param region : Sequence of inter-connected polygon points. Last point is connected to first point
-     * @return true if region could be interpreted
+     * @return void
      */
     virtual void setPolygonRegion(const std::vector<std::pair<float, float>> & region) override;
+
+protected:
+    std::vector<StftMoment> stftMoments;
+    float overlap;
+    unsigned int nSamples;
+    unsigned int windowLength;
+    unsigned int windowCenterOffset;
+    std::shared_ptr<std::vector<TF_DATA_TYPE>> pWindow;
+    std::shared_ptr<FFTParam> hFFT;
+    unsigned int momentStep;
+    std::vector<TF_DATA_TYPE> input;
+    unsigned int pre;
+    unsigned int post;
+
+private:
+    static constexpr float sigma = 0.1;
 };
+
 }
+#endif // STFTTRANSFORMER_H

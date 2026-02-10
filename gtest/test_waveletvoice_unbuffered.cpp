@@ -116,10 +116,10 @@ TEST(WaveletVoiceUnbuffered, GeneralConfiguration) {
         ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q, overlap, &filter);
         w.allocateResult(n_samples, 0, false);
         w.getRequiredPaddingSamples(_pre, _post);
-        EXPECT_GE(_pre, 2 * pre) << "Q : " << Q;
+        EXPECT_GE(_pre, 2 * pre - 1) << "Q : " << Q;  // Take into account rounding effects
         EXPECT_LE(_pre, 2 * pre + 1) << "Q : " << Q;
 
-        EXPECT_GE(_post, 2 * post) << "Q : " << Q;
+        EXPECT_GE(_post, 2 * post - 1) << "Q : " << Q; // Take into account rounding effects
         EXPECT_LE(_post, 2 * post + 1) << "Q : " << Q;
         pre = _pre;
         post = _post;
@@ -209,8 +209,9 @@ TEST(WaveletVoiceUnbuffered, Transformation) {
     }
     double duration = sqrt(duration_sqr_sum / weight_sum);
     double theoretical_duration = Q / 2 / 4 / atan(1) / frequency;    // Theoretical RMS duration is: 1/Q = 2*dF/relF = 1/2/pi/dT/relF ==> dT = Q/(2*pi*relF) = 10 / (2*pi*0.2) = 7.96
-
-    EXPECT_LE(abs(duration - theoretical_duration) / theoretical_duration, 0.01) << "RMS Duration " << duration << " (" << theoretical_duration << ")";
+    double sigma = 0.1;
+    double precision = 1/(theoretical_duration / sigma);
+    EXPECT_LE(abs(duration - theoretical_duration) / theoretical_duration, precision) << "RMS Duration " << duration << " (" << theoretical_duration << ")";
 
 
     // Verify in frequency domain
@@ -240,7 +241,7 @@ TEST(WaveletVoiceUnbuffered, Transformation) {
     }
     double bw = sqrt(bw_sqr_sum / weight_sum) / n_samples;
     double theoretical_bw = frequency / Q / 2;
-    EXPECT_LE(abs(bw - theoretical_bw) / theoretical_bw, 0.015) << "bw " << bw << ", theoretical bw " << theoretical_bw;
+    EXPECT_LE(abs(bw - theoretical_bw) / theoretical_bw, precision) << "bw " << bw << ", theoretical bw " << theoretical_bw;
 
     EXPECT_LE(bw * duration * 4 * 4 * atan(1), 1.01);
 

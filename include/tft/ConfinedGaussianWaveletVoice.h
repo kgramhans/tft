@@ -27,9 +27,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define CGWaveletVoice_h
 
 #include "WaveletVoice.h"
+#include "tft/ConfinedGaussian.h"
 
 namespace TFT {
-    class ConfinedGaussianWaveletVoice : public WaveletVoice
+    class ConfinedGaussianWaveletVoice : public WaveletVoice, protected ConfinedGaussian
     {
     public:
        /**
@@ -87,11 +88,7 @@ namespace TFT {
     protected:
         static constexpr float sigma = 0.1;
         static constexpr float bw70Ratio = 6.5;
-        unsigned int waveletLength;
         double q;
-
-        float gaussian(float x);
-        float approximateConfinedGaussian(float x);
     };
 }
 #endif // !CGWaveletVoice_h

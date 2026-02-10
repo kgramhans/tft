@@ -282,7 +282,7 @@ void TFT::WaveletVoice::executeSequence(int freqStride, int timeStride, TF_DATA_
    }
 }
 
-std::vector<TF_DATA_TYPE> TFT::WaveletVoice::constructVoiceSignal(const IRegion & region) const {
+std::vector<TF_DATA_TYPE> TFT::WaveletVoice::constructVoiceSignal(const std::unique_ptr<IRegion> & region) const {
     // If someone has already constructed a result, we will be using that
     if (!voiceSignalBuffer.empty()) {
         auto rval = voiceSignalBuffer;
@@ -304,7 +304,7 @@ std::vector<TF_DATA_TYPE> TFT::WaveletVoice::constructVoiceSignal(const IRegion 
         int iTime = inx * transformStep;
 
         // Check if we are within region or not
-        if (!region.isWithin(iTime << octave, getUndecimatedFrequency())) {
+        if (!region->isWithin(iTime << octave, getUndecimatedFrequency())) {
             continue;   // Exclude from summation
         }
 
@@ -362,7 +362,7 @@ std::vector<TF_DATA_TYPE> TFT::WaveletVoice::constructVoiceSignal(const IRegion 
     return signal; // Voila!
 }
 
-void TFT::WaveletVoice::constructVoiceSignalBuffer(const IRegion & region) const
+void TFT::WaveletVoice::constructVoiceSignalBuffer(const std::unique_ptr<IRegion> & region) const
 {
     voiceSignalBuffer = constructVoiceSignal(region);
 }
