@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <utility>
+#include <memory>
 
 
 namespace TFT {
@@ -23,6 +24,13 @@ public:
          */
     virtual bool isWithin(float abscissa, float ordinate) const = 0;
 
+    /**
+     * @brief clone
+     * @return pointer to yet another instance
+     */
+    virtual std::unique_ptr<IRegion> cloneRegion() const = 0;
+
+    virtual ~IRegion() {}
 };
 }
 

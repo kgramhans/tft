@@ -27,6 +27,8 @@ enable_testing()
 add_executable(
   tft_gtest
   test_polygonregion.cpp
+  test_stftmoment.cpp
+  test_stfttransformer.cpp
   test_dyadicfilter.cpp
   test_waveletvoice_unbuffered.cpp
   test_waveletvoice_buffered.cpp

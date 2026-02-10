@@ -13,7 +13,7 @@ namespace TFT {
        size_t Points;
     };
 
-    std::unique_ptr<FFTParam> GetFFT(size_t);
+    std::shared_ptr<FFTParam> GetFFT(size_t);
     void RealFFTf(fft_type *, const FFTParam *);
     void InverseRealFFTf(fft_type *, const FFTParam *);
     void ReorderToTime(const FFTParam *hFFT, const fft_type *buffer, fft_type *TimeOut);

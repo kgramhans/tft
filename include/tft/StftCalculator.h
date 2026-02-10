@@ -127,7 +127,7 @@ namespace TFT {
        unsigned int nSamples;                    ///< Length of signal being investigated
        std::vector<TF_DATA_TYPE>  vWindow;            ///< Holds coefficients of window function properly normalised
        std::vector<TF_DATA_TYPE> vTransformBuffer;    ///< Buffer used to hold signal being investigated
-       std::unique_ptr<TFT::FFTParam> hFFT;                ///< Pointer to FFT related structures
+       std::shared_ptr<TFT::FFTParam> hFFT;                ///< Pointer to FFT related structures
     };
 }
 

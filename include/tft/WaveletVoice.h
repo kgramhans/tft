@@ -49,9 +49,8 @@ namespace TFT {
         bool containsFrequency(double f) { return f >= fLow && f < fHigh;}
         bool frequencyWithin(float lo, float hi) {return getUndecimatedFrequency() >= lo && getUndecimatedFrequency() < hi || getUndecimatedFrequency() >= hi && getUndecimatedFrequency() < lo;}
         void executeSequence(int freqStride, int timeStride, TF_DATA_TYPE * out, std::vector<double>::const_iterator timeIterBegin, std::vector<double>::const_iterator timeIterEnd, bool transpose);
-        std::vector<TF_DATA_TYPE> constructVoiceSignal(const IRegion & region) const;
-        void constructVoiceSignalBuffer(const IRegion & region) const;
-        bool isWithinRegion(float t) const;
+        std::vector<TF_DATA_TYPE> constructVoiceSignal(const std::unique_ptr<IRegion> &region) const;
+        void constructVoiceSignalBuffer(const std::unique_ptr<IRegion> &region) const;
         double getUndecimatedFrequency() const {return frequency;}
 
     protected:

@@ -2,8 +2,8 @@
 #include <iterator>
 #include <algorithm>
 
-TFT::PolygonRegion::PolygonRegion() {}
-TFT::PolygonRegion::PolygonRegion(const std::vector<std::pair<float, float>> & region) {
+TFT::PolygonRegionHorizontal::PolygonRegionHorizontal() {}
+TFT::PolygonRegionHorizontal::PolygonRegionHorizontal(const std::vector<std::pair<float, float>> & region) {
     setCorners(region);
 }
 
@@ -12,7 +12,7 @@ TFT::PolygonRegion::PolygonRegion(const std::vector<std::pair<float, float>> & r
  * @param region
  * @return Validity of region
  */
-void TFT::PolygonRegion::setCorners(const std::vector<std::pair<float, float>> & region) {
+void TFT::PolygonRegionHorizontal::setCorners(const std::vector<std::pair<float, float>> & region) {
     corners = region;
 
     // add first point in the end in order to assure we close the polygon
@@ -39,7 +39,7 @@ void TFT::PolygonRegion::setCorners(const std::vector<std::pair<float, float>> &
  * @param ordinate
  * @return An ordered list of crossings of "ordinate". Crossing also if region just touches. If region segment is parallel to abscissa axis, no crossing exists
  */
-std::vector<float> TFT::PolygonRegion::abscissasOf(float ordinate) const {
+std::vector<float> TFT::PolygonRegionHorizontal::abscissasOf(float ordinate) const {
     std::vector<float> crossings;
     if (crossingsCache.lookup(ordinate, crossings)) {
         return  crossings;
@@ -49,7 +49,6 @@ std::vector<float> TFT::PolygonRegion::abscissasOf(float ordinate) const {
     // In this process, p2 is trailing p1
     // We end iteration when p1 reaches the end
     for (auto p1 = corners.cbegin(), p2 = corners.cbegin(); ++p1 != corners.cend(); p2++) {
-        // Iterate all voices and record crossings
         bool hasCross(false);
         hasCross = p1->second != p2->second && (ordinate >= p1->second && ordinate < p2->second || ordinate > p2->second && ordinate <= p1->second);
         if (hasCross) {
@@ -67,7 +66,7 @@ std::vector<float> TFT::PolygonRegion::abscissasOf(float ordinate) const {
     return crossingsCache.set(ordinate, crossings);
 }
 
-bool TFT::PolygonRegion::isWithin(float abscissa, float ordinate) const {
+bool TFT::PolygonRegionHorizontal::isWithin(float abscissa, float ordinate) const {
     // An empty region is the same as everything within
     if (corners.empty()) {
         return true;

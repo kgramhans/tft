@@ -71,7 +71,7 @@ void TFT::WaveletTransformer::executeBackwardSequence(int iSequence) const
 {
     assert(iSequence >= 0);
     assert(iSequence < waveletVoices.size());
-    waveletVoices[iSequence]->constructVoiceSignalBuffer(*this);
+    waveletVoices[iSequence]->constructVoiceSignalBuffer(this->cloneRegion());
 }
 
 unsigned int TFT::WaveletTransformer::backwardTransform(std::vector<TF_DATA_TYPE> & signal) const {
@@ -80,7 +80,7 @@ unsigned int TFT::WaveletTransformer::backwardTransform(std::vector<TF_DATA_TYPE
     // Iterate all voices and ask for contribution
     for (auto iter = waveletVoices.begin(); iter != waveletVoices.end(); iter++)
     {
-        auto v = (*iter)->constructVoiceSignal(*this);
+        auto v = (*iter)->constructVoiceSignal(this->cloneRegion());
         for (int inx = 0; inx < nSamples; inx++) {
             signal[inx] += v[inx];
         }
