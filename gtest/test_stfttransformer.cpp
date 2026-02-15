@@ -4,6 +4,7 @@
 #include <tft/tft.h>
 #include <random>
 #include <thread>
+#include <queue>
 
 using namespace TFT;
 using namespace std;
