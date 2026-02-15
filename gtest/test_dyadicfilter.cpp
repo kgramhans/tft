@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <tft/tft.h>
+#include <cmath>
 
 using namespace TFT;
 using namespace std;
