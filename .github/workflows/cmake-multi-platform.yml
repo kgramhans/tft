@@ -26,20 +26,16 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         build_type: [Debug]
         c_compiler: [gcc, clang, cl]
-        test_executable : [gtest/tft_gtest gtest\tft_gtest.exe]
         include:
           - os: windows-latest
             c_compiler: cl
             cpp_compiler: cl
-            test_executable: gtest\tft_gtest.exe
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
-            test_executable: gtest/tft_gtest
           - os: ubuntu-latest
             c_compiler: clang
             cpp_compiler: clang++
-            test_executable: gtest/tft_gtest
         exclude:
           - os: windows-latest
             c_compiler: gcc
@@ -73,8 +69,7 @@ jobs:
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
     - name: Test
-      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}/gtest
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ${{ matrix.test_executable }}
-      # run: ctest --build-config ${{ matrix.build_type }}
+      run: ctest --build-config ${{ matrix.build_type }}
