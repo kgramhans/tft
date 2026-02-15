@@ -28,6 +28,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "WaveletVoice.h"
 #include "tft/ConfinedGaussian.h"
+#include <cmath>
 
 namespace TFT {
     class ConfinedGaussianWaveletVoice : public WaveletVoice, protected ConfinedGaussian

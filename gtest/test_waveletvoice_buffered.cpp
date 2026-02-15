@@ -3,6 +3,8 @@
 #include <tft/RealFFTf.h>
 #include <tft/ConfinedGaussianWaveletVoice.h>
 #include <random>
+#include <numeric>
+#include <cmath>
 
 using namespace TFT;
 using namespace std;

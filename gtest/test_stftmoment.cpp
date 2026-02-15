@@ -3,6 +3,7 @@
 #include <tft/tft.h>
 #include <tft/StftMoment.h>
 #include <random>
+#include <cmath>
 
 using namespace TFT;
 using namespace std;

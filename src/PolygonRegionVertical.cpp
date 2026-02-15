@@ -1,4 +1,6 @@
 #include <tft/PolygonRegionVertical.h>
+#include <iterator>
+#include <algorithm>
 
 namespace TFT {
 PolygonRegionVertical::PolygonRegionVertical() {}
