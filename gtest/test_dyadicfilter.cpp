@@ -30,8 +30,9 @@ TEST(DyadicFilter, BasicConfiguration) {
     EXPECT_EQ(DyadicFilter::getExtraSamples(20), ((1<<20) - 1)*DyadicFilter::getExtraSamples(1));
 
     int xtra = DyadicFilter::getExtraSamples(n_octaves - 1);
-    int n_samples = 1000 + 2 * xtra;
-    vector<TF_DATA_TYPE> vInput(n_samples, 0);
+    int n_samples = 1000;
+    int n_buffer_samples = n_samples + 2 * xtra;
+    vector<TF_DATA_TYPE> vInput(n_buffer_samples, 0);
     // Cannot filter without allocation
     EXPECT_DEBUG_DEATH(filter.filterSamples(&vInput[xtra], n_samples, xtra, xtra), "Assertion");
 
