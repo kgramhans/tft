@@ -51,11 +51,11 @@ TEST(WaveletVoiceUnbuffered, ConfinedGaussianConstruction) {
         Q = dist100(rng);
         if (Q > 1) {
             EXPECT_NO_THROW(
-                ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q, overlap, &filter);
+                ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q - 0.1, overlap, &filter);
                 ) << "Q: " << Q << ", f; " << frequency;
         } else {
             EXPECT_DEBUG_DEATH(
-                ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q, overlap, &filter), "Assertion"
+                ConfinedGaussianWaveletVoice w(frequency, frequency - 0.1, frequency + 0.2, Q - 0.1, overlap, &filter), "Assertion"
                 ) << "Q: " << Q << ", f; " << frequency;
         }
     }
